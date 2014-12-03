@@ -107,7 +107,7 @@ function placeMarker(location) {
           </div>
       </nav>
       <h2>Create</h2>
-    <form enctype = "multipart/form-data" method="post">
+    <form enctype = "multipart/form-data" method="post" action="{{upload_url}}">
       <div class="row">
 	<div class="col-md-4">
 	  <label>Tag: </label></br>
@@ -124,17 +124,17 @@ function placeMarker(location) {
      <div class="row">
        <div class="col-md-3">
 	 <label>Title:</label>
-	 <input type="text" name="title" class="form-control" placeholder="Enter title">
+	 <input type="text" name="title" class="form-control" placeholder="Enter title" required>
        </div>
      </div></br>
      <div class="row">
        <div class="col-md-3">
 	 <label>Start date</label> 
-	<input id="datetimepicker1" type="text" class="form-control" name="start_date">
+	<input id="datetimepicker1" type="text" class="form-control" name="start_date" required>
        </div>
        <div class="col-md-3">
 	 <label>End date</label> 
-	<input id="datetimepicker2" type="text" class="form-control" name="end_date">
+	<input id="datetimepicker2" type="text" class="form-control" name="end_date" required>
        </div>
      </div></br>
      <div class="row">
@@ -159,9 +159,15 @@ function placeMarker(location) {
        </div>
        <div class="col-md-3">
 	<label>Zipcode:</label>
-	<input type="text" name="zipcode" class="form-control">
+	<input type="text" name="zipcode" class="form-control" required>
        </div>
      </div></br>
+     <div class="row">
+       <div class="col-md-6">
+	 <label>Detailed Address</label>
+         <input type="text" name="address" class="form-control" required>	
+       </div>
+     </div>
      <div class="row">
 	<div class="col-md-3">
 	  <label>Click on the map</label>
@@ -180,7 +186,7 @@ function placeMarker(location) {
 	<div class="col-md-4">
 	  <div class="form-group">
 	     <label>Upload Cover image</label>
-             <input id="file-1a" type="file" multiple=true class="form-control" data-show-upload="false" data-preview-file-type="any" data-initial-caption="Cover image" data-overwrite-initial="false">
+             <input id="file-1a" type="file" name="cover" multiple=true class="form-control" data-show-upload="false" data-preview-file-type="any" data-initial-caption="Cover image" data-overwrite-initial="false">
           </div>
         </div>	
      </div></br>
@@ -189,6 +195,7 @@ function placeMarker(location) {
           <input type="submit" class="btn btn-primary" values="Submit">
           <input id="latitude" type="hidden" name="latitude" value="0">
           <input id="longitude" type="hidden" name="longitude" value="0">
+          <input type="hidden" name="user" value="{{user}}">
 	</div>
      </div>
     </form>

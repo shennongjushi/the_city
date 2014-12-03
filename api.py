@@ -234,7 +234,7 @@ class Activity_api(webapp2.RequestHandler):
 	    if host:
 		host_photo = host.photo
 		host_nick = host.nickname
-
+	    
 	    responses = {
 		'title':activity.title,
 		'start_date':start_date,
@@ -299,13 +299,15 @@ class Take_api(webapp2.RequestHandler):
 	guest_id = requests['guest_id']
 	action = requests['action']
 	comment = requests['comment']
+	author = ''
 	activity = ndb.Key(Activity, long(activity_id)).get()
-	if activity:
+	if activity and action == '1':
 	    comment_entity = Activity_comment(parent = ndb.Key(Activity, long(activity_id)))
 	    if guest_id:
 	        guest_query = ndb.Key(Webusers, str(guest_id)).get()
 	    	if guest_query:
 		    comment_entity.author = guest_query.nickname
+		    author = guest_query.nickname
 	    comment_entity.content = comment
 	    comment_entity.put()
 	guest = ndb.Key(Webusers, str(guest_id)).get()
@@ -326,7 +328,9 @@ class Take_api(webapp2.RequestHandler):
 	    action = "1"
 	responses = {
 	    'take': str(take_number),
-	    'action': action
+	    'action': action,
+	    'author':author,
+	    'content':comment
 	}
 	print "take number= " + str(take_number)
         self.response.headers['Content-Type'] = "application/json"

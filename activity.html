@@ -32,11 +32,14 @@
        border-radius: 4px;
    }
    .my_thumbnail1 img{
-	height:600px;
+	height:300px;
    }
 
    .my_thumbnail2 img{
 	height:100px;
+   }
+   .my_thumbnail3 img{
+	height:85px;
    }
 </style>
 <script src="https://maps.googleapis.com/maps/api/js"></script>
@@ -111,7 +114,7 @@ function initialize() {
         <div class="col-sm-7 blog-main">
 	  <div class="blog-post">
             <div class="row">
-              <div class="col-md-6 my_thumbnail">
+              <div class="col-md-6 my_thumbnail1">
 		</br>
                 <img src="/img?key={{cover}}" class="img-thumbnail" width="400px" height="600px">
               </div>
@@ -237,6 +240,15 @@ function initialize() {
 			    alert("You have add the take activity");
 			    $('#take_action').val("0");
 			    $('#take').attr('data-target','.take2');
+		            if(data.author){
+			        console.log(data.author);
+		                $("#user_chat").append( "<b>" + data.author + "</b> saied" +
+         	                "<blockquote>" + data.content + "</blockquote>" );
+		            }
+		            else{
+		                $( "#user_chat" ).append( "<b>An anonymous person</b> saied:" +
+         	                "<blockquote>" + data.content + "</blockquote>" ); 
+		            }
 			}
 			else{
 		            $('#take').html('<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> '+data.take+' take');
@@ -296,8 +308,10 @@ function initialize() {
             <a href="/person?user={{host}}" class="my_thumbnail2"><img src="img?key={{host_photo}}" class="img-thumbnail" width="100px" height="100px"></br>{{host_nick}}</a></br></br>
 	    <h4>Paticipates</h4>
 	    <div class="row">
-	      <div class="col-md-4">
-                <a href=""><img src="" class="img-thumbnail" width="100px" height="100px"></a>
+	      <div class="col-md-4 my_thumbnail3">
+		{% if all_guests %}
+                <a href="/person?user={{all_guests[0].key.id()}}"><img src="/img?key={{all_guests[0].photo}}" class="img-thumbnail" width="100px" height="100px"></a>
+		{% endif %}
 	      </div>
 	      <div class="col-md-4">
                 <a href=""><img src="" class="img-thumbnail" width="100px" height="100px"></a>

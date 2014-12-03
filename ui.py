@@ -282,6 +282,14 @@ class Activity_page(webapp2.RequestHandler):
         if responses.status == 200:
 	    data = json.loads(responses.read())
 	    print "host" + data['host_photo']
+	    #guest
+	    all_guests = list()
+	    all_users = Webusers.query().fetch()
+	    for user in all_users:
+		if str(activity_id) in user.take_activity:
+		    all_guests.append(user)
+		    print user.nickname
+
 	    template_value = {
 	    	'title': data['title'],
 		'start_date':data['start_date'],
@@ -306,7 +314,8 @@ class Activity_page(webapp2.RequestHandler):
 		'take_action':data['take_action'],
 		'all_date':data['all_date'],
 		'more':len(data['all_date'])-1,
-		'comments':comments
+		'comments':comments,
+		'all_guests':all_guests
 	    }
 	    print "like_action:" + str(data['like_action'])
 	    template = JINJA_ENVIRONMENT.get_template('activity.html')
