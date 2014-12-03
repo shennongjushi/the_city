@@ -31,7 +31,18 @@
   max-height: 300px;
   margin: 0 auto;
 }
+#hello {
+   color: #399ab2;
+   padding-bottom: 15px;
+   padding-top: 25px;
+   line-height: 0px;
+   display:block;
 
+}
+#in_out {
+    padding-bottom: 8px;
+    padding-top: 8px;
+}
 </style>
     <div class="container">
       <nav class="navbar navbar-default" role="navigation">
@@ -42,26 +53,40 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="index.html">The City</a>
+              <a class="navbar-brand" href="/">The City</a>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav">
                   <li class="active">
-			<a href="post.html">
+			<a href="/post">
 				<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> I want to Post
 			</a>
-			</li>
+		  </li>
                   <li class="dropdown">
-                      <a href="all_activities.html" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
+                      <a href="/all_activities" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
                       <ul class="dropdown-menu">
-                          <li><a href="all_activities.html#music">Music</a></li>
-                          <li><a href="all_activities.html#movie">Movie</a></li>
-                          <li><a href="all_activities.html#travel">Travel</a></li>
-                          <li><a href="all_activities.html#food">Food</a></li>                    
+                          <li><a href="/all_activities#music">Music</a></li>
+                          <li><a href="/all_activities#movie">Movie</a></li>
+                          <li><a href="/all_activities#travel">Travel</a></li>
+                          <li><a href="/all_activities#food">Food</a></li>                    
                       </ul>
                   </li>
-		  <li><a href="my_city.html">My City</a></li>
-              </ul>
+		  <li><a href="/my_city">My City</a></li>
+	      </ul>
+	      <ul class="nav navbar-nav pull-right">
+		  <li>
+		     {% if user %}
+		      <p id="hello">Hello~ {{nickname}}</p>
+		  </li>
+		  <li>
+		      <a href="{{logout_url}}" id ="in_out"><button type="button" class="btn btn-default">Sign out</button></a>
+		  </li>
+	      </li>
+		      {% else %}
+		      <a href="{{login_url}}" id="in_out"><button type="button" class="btn btn-default">Sign in</button></a>
+		  </li>
+		      {% endif %}
+	      </ul>
               <div class="col-sm-3 col-md-3 pull-right">
                   <form class="navbar-form" role="search">
                       <div class="input-group">
@@ -104,7 +129,7 @@
               <span class="sr-only">Next</span>
             </a>
           </div> 
-          </div>
+        </div>
         <div class="col-md-2"></div>
       </div></br>
       <div class="row">
@@ -112,7 +137,7 @@
 	  <h3>Hot Music</h3>
 	</div>
         <div class="col-md-2">
-	  <h2><button type="button" class="btn btn-default" onclick="window.location.href='all_activities.html#music'">More</button></h2>
+	  <h2><button type="button" class="btn btn-default" onclick="window.location.href='/all_activities#music'">More</button></h2>
 	</div>
       </div>
       <div class="row">
@@ -134,7 +159,7 @@
 	  <h3>Hot Movie</h3>
 	</div>
         <div class="col-md-2">
-	  <h2><button type="button" class="btn btn-default" onclick="window.location.href='all_activities.html#movie'">More</button></h2>
+	  <h2><button type="button" class="btn btn-default" onclick="window.location.href='/all_activities#movie'">More</button></h2>
 	</div>
       </div>
       <div class="row">
@@ -156,7 +181,7 @@
 	  <h3>Hot Travel</h3>
 	</div>
         <div class="col-md-2">
-	  <h2><button type="button" class="btn btn-default" onclick="window.location.href='post.html'">More</button></h2>
+	  <h2><button type="button" class="btn btn-default" onclick="window.location.href='/all_activites#travel'">More</button></h2>
 	</div>
       </div>
       <div class="row">
@@ -175,10 +200,10 @@
       </div>
       <div class="row">
 	<div class="col-md-10">
-	  <h3>Hot Travel</h3>
+	  <h3>Hot Food</h3>
 	</div>
         <div class="col-md-2">
-	  <h2><button type="button" class="btn btn-default" onclick="window.location.href='post.html'">More</button></h2>
+	  <h2><button type="button" class="btn btn-default" onclick="window.location.href='/all_activities#food'">More</button></h2>
 	</div>
       </div>
       <div class="row">
