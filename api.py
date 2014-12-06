@@ -8,7 +8,47 @@ from google.appengine.api import images
 import webapp2
 import json
 import base64
+import os
+import pickle
+import logging
+import httplib2
+
+from apiclient import discovery
+from oauth2client import appengine
+from oauth2client import client
+from google.appengine.api import memcache
 from datetime import *
+
+# CLIENT_SECRETS, name of a file containing the OAuth 2.0 information for this
+# application, including client_id and client_secret, which are found
+# on the API Access tab on the Google APIs
+# Console <http://code.google.com/apis/console>
+CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
+
+# Helpful message to display in the browser if the CLIENT_SECRETS file
+# is missing.
+MISSING_CLIENT_SECRETS_MESSAGE = """
+<h1>Warning: Please configure OAuth 2.0</h1>
+<p>
+To make this sample run you will need to populate the client_secrets.json file
+found at:
+</p>
+<p>
+<code>%s</code>.
+</p>
+<p>with information found on the <a
+href="https://code.google.com/apis/console">APIs Console</a>.
+</p>
+""" % CLIENT_SECRETS
+
+
+http = httplib2.Http(memcache)
+service = discovery.build("calendar", "v3", http=http)
+decorator = appengine.oauth2decorator_from_clientsecrets(
+    CLIENT_SECRETS,
+    #scope='https://www.googleapis.com/auth/plus.me',
+    scope='https://www.googleapis.com/auth/calendar',
+    message=MISSING_CLIENT_SECRETS_MESSAGE)
 
 # Images under an Activity, its parent is an activity
 class Imag(ndb.Model):
@@ -57,7 +97,39 @@ class Webusers(ndb.Model):#Each Webusers xx.key.id() is the user
     photo = ndb.StringProperty()
     subscribe = ndb.StringProperty(repeated = True)
     interest = ndb.StringProperty(repeated = True)
-    introduce = ndb.StringProperty() 
+    introduce = ndb.StringProperty()
+    google_calendar = ndb.BooleanProperty()
+    calendar_key = ndb.StringProperty(repeated = True)
+
+##Change time format for google calendar
+def change_time_format(time, time_type):
+    t = time + timedelta(hours = 6)
+    year = t.year
+    month = t.month
+    day = t.day
+    hour = t.hour
+    minute = t.minute
+    if month < 10:
+	month = '0'+str(month)
+    else:
+	month = str(month)
+    if day < 10:
+	day = '0'+ str(day)
+    else:
+	day = str(day)
+    if hour < 10:
+	hour = '0' + str(hour)
+    else:
+	hour = str(hour)
+    if minute < 10:
+	minute = '0' + str(minute)
+    else:
+	minute = str(minute)
+    if time_type == 0:
+        return str(year)+month+day+'T'+hour+minute+'00Z' 
+    else:
+	return str(year)+'-'+month+'-'+day+'T'+hour+':'+minute+':00-00:00'
+
 
 #Post activity upload to blobstore and database
 class Upload_api(blobstore_handlers.BlobstoreUploadHandler):
@@ -101,6 +173,7 @@ class Profile_api(blobstore_handlers.BlobstoreUploadHandler):
 	user_query = ndb.Key(Webusers, str(user_)).get()
 	if not user_query:
 	    user_query = Webusers(id=str(user_))
+	    user_query.google_calendar = False
 	user_query.nickname = self.request.get('nick')
 	user_query.gender = self.request.get('gender')
 	birthday_ = self.request.get('birthday')
@@ -130,13 +203,6 @@ class Person_api(webapp2.RequestHandler):
 	for each in users:
 	    if user_id in each.subscribe:
 		i = i + 1
-	#greeting
-	greetings_author = list()
-	greetings_content = list()
-	greetings = Greeting_person.query(ancestor=ndb.Key(Webusers, str(user_id))).order(Greeting_person.date).fetch()
-	for greeting in greetings:
-	    greetings_author.append(greeting.author)
-	    greetings_content.append(greeting.content)
 	responses = {
 	    'taken': user.take_activity,
 	    'like': user.like_activity,
@@ -147,8 +213,6 @@ class Person_api(webapp2.RequestHandler):
 	    'photo':user.photo,
 	    'sub_me_number': i,
 	    'gender':user.gender,
-	    'greetings_author':greetings_author,
-	    'greetings_content':greetings_content
 	}
         self.response.headers['Content-Type'] = "application/json"
         self.response.headers['Accept'] = "text/plain"
@@ -234,7 +298,15 @@ class Activity_api(webapp2.RequestHandler):
 	    if host:
 		host_photo = host.photo
 		host_nick = host.nickname
-	    
+	   #######Google Calendar date calculate#########
+	    calendar_start = ''
+	    calendar_end = ''
+	    if activity.start_date:
+		calendar_start = change_time_format(activity.start_date,0)
+		
+	    if activity.end_date:
+		calendar_end = change_time_format(activity.end_date,0)
+	   ############################################## 
 	    responses = {
 		'title':activity.title,
 		'start_date':start_date,
@@ -256,11 +328,13 @@ class Activity_api(webapp2.RequestHandler):
 		'all_date':all_date,
 		'like_action':like_action,
 		'take_action':take_action,
+		'calendar_start':calendar_start,
+		'calendar_end':calendar_end
 	    }	
             self.response.headers['Content-Type'] = "application/json"
             self.response.headers['Accept'] = "text/plain"
             self.response.write(json.dumps(responses))
-	   
+ 
 class Like_api(webapp2.RequestHandler):
     def post(self):
 	requests = json.loads(self.request.body)
@@ -293,6 +367,7 @@ class Like_api(webapp2.RequestHandler):
         self.response.write(json.dumps(responses))
 
 class Take_api(webapp2.RequestHandler):
+    @decorator.oauth_aware
     def post(self):
 	requests = json.loads(self.request.body)
 	activity_id = requests['activity_id']
@@ -300,8 +375,9 @@ class Take_api(webapp2.RequestHandler):
 	action = requests['action']
 	comment = requests['comment']
 	author = ''
-	activity = ndb.Key(Activity, long(activity_id)).get()
-	if activity and action == '1':
+	activity_key = ndb.Key(Activity, long(activity_id))
+	activity = activity_key.get()
+	if activity and action == '1' and comment:
 	    comment_entity = Activity_comment(parent = ndb.Key(Activity, long(activity_id)))
 	    if guest_id:
 	        guest_query = ndb.Key(Webusers, str(guest_id)).get()
@@ -317,6 +393,8 @@ class Take_api(webapp2.RequestHandler):
 	    activity.take_number = activity.take_number + 1
 	    activity.put()
 	    guest.take_activity.append(str(activity_id))
+	    if decorator.has_credentials():
+		guest.google_calendar = True 
 	    guest.put()
 	    action = "0"
 	elif action == "0" and (str(activity_id) in guest.take_activity):
@@ -324,6 +402,8 @@ class Take_api(webapp2.RequestHandler):
 	    activity.take_number = activity.take_number - 1
 	    activity.put()
 	    guest.take_activity.remove(str(activity_id))
+	    if decorator.has_credentials():
+		guest.google_calendar = True
 	    guest.put()
 	    action = "1"
 	responses = {
@@ -332,11 +412,46 @@ class Take_api(webapp2.RequestHandler):
 	    'author':author,
 	    'content':comment
 	}
+#####################################################
+#		Google Calendar
+#####################################################
+	calendar_start = ''
+	calendar_end = ''
+	if activity.start_date:
+	    calendar_start = change_time_format(activity.start_date,1) 
+	if activity.end_date:
+	    calendar_end = change_time_format(activity.end_date,1)
+	if decorator.has_credentials() and requests['action'] == '1':
+    	     event = {
+    	       'summary':activity.title,
+    	       'location': activity.address,
+    	       'start': {
+    		'dateTime': calendar_start
+    	     	},
+    	       'end': {
+    		'dateTime': calendar_end
+    	        },
+    	     }
+    	     http = decorator.http()
+    	     created_event = service.events().insert(calendarId='primary', body=event).execute(http)
+	     guest.calendar_key.append(str(activity_id)+':'+created_event['id'])
+	     guest.put()
+	elif decorator.has_credentials() and requests['action'] == "0":
+	     for key in guest.calendar_key:
+		if str(activity_id) in key:
+		    event = key.split(':')
+    	     	    http = decorator.http()
+		    delete_event = service.events().delete(calendarId='primary', eventId=str(event[1])).execute(http)
+		    guest.calendar_key.remove(key)
+		    break
+#####################################################
+#		Google Calendar
+#####################################################
 	print "take number= " + str(take_number)
         self.response.headers['Content-Type'] = "application/json"
         self.response.headers['Accept'] = "text/plain"
         self.response.write(json.dumps(responses))
-    
+
 application = webapp2.WSGIApplication([
     ('/api/post',Upload_api),
     ('/api/profile',Profile_api),
@@ -346,5 +461,5 @@ application = webapp2.WSGIApplication([
     ('/api/activity', Activity_api),
     ('/api/like', Like_api),
     ('/api/take', Take_api),
-    ('/api/activity_comment',Activity_comment_api)
+    ('/api/activity_comment',Activity_comment_api),
 ], debug=True)
