@@ -21,14 +21,64 @@ import re
 import random
 import urllib2
 
+def larger0(someitem):
+    return someitem > 0
+
+def larger1(someitem):
+    return someitem > 1
+def larger2(someitem):
+    return someitem > 2
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
-
+JINJA_ENVIRONMENT.tests["larger0"] = larger0
+JINJA_ENVIRONMENT.tests["larger1"] = larger1
+JINJA_ENVIRONMENT.tests["larger2"] = larger2
 class Index(webapp2.RequestHandler):
     def get(self):
-	user = users.get_current_user()
+        music_activity = list()
+        movie_activity = list()
+        travel_activity = list()
+        food_activity = list()
+        hot_activities = 0
+        music = 0
+        movie = 0
+        travel = 0
+        food = 0
+        activities = Activity.query().order(-Activity.hot_number).fetch()
+        if (len(activities)>3):
+            hot_activities = 3
+        else:
+            hot_activities = len(activities)
+        for activity in activities:
+            print activity.hot_number
+            if (activity.tag.lower() == "music"):
+                music_activity.append(activity)
+            elif (activity.tag.lower() == "movie"):
+                movie_activity.append(activity)
+            elif (activity.tag.lower() == "travel"):
+                travel_activity.append(activity)
+            elif (activity.tag.lower() == "food"):
+                food_activity.append(activity)
+        if (len(music_activity)>4):
+            music = 4
+        else:
+            music = len(music_activity)
+        if (len(movie_activity)>4):
+            movie = 4
+        else:
+            movie = len(movie_activity)
+        if (len(travel_activity)>4):
+            travel = 4
+        else:
+            travel = len(travel_activity)
+        if (len(food_activity)>4):
+            food = 4
+        else:
+            food = len(food_activity)
+        user = users.get_current_user()
 	if user:
             user_query = ndb.Key(Webusers,user.email()).get()
 	    if not user_query:
@@ -38,7 +88,17 @@ class Index(webapp2.RequestHandler):
 	        template_value = {
 	    	'user': user,
 	    	'nickname':user_query.nickname,
-		'logout_url':logout_url 
+		'logout_url':logout_url,
+                'activities':activities,
+                'hot_activities':hot_activities,
+                'music':music,
+                'music_activity':music_activity,
+                'food':food,
+                'food_activity':food_activity,
+                'movie':movie,
+                'movie_activity':movie_activity,
+                'travel':travel,
+                'travel_activity':travel_activity,
 	        }
 		template = JINJA_ENVIRONMENT.get_template('index.html')
 		self.response.write(template.render(template_value))
@@ -46,7 +106,17 @@ class Index(webapp2.RequestHandler):
 	    login_url = users.create_login_url('/')
 	    template_value = {
 		'user': user,
-		'login_url':login_url
+		'login_url':login_url,
+                'activities':activities,
+                'hot_activities':hot_activities,
+                'music':music,
+                'music_activity':music_activity,
+                'food':food,
+                'food_activity':food_activity,
+                'movie':movie,
+                'movie_activity':movie_activity,
+                'travel':travel,
+                'travel_activity':travel_activity,
 	    }
 	    template = JINJA_ENVIRONMENT.get_template('index.html')
 	    self.response.write(template.render(template_value))
@@ -322,6 +392,77 @@ class Activity_page(webapp2.RequestHandler):
 	    self.response.write(template.render(template_value))
 	    
 	    
+class All_Activity(webapp2.RequestHandler):
+    def get(self):
+        activities = Activity.query().order(Activity.start_date).fetch()
+        music_cover = list()
+        music_title = list()
+        music_activity = list()  
+        food_cover = list()
+        food_title = list()
+        food_activity = list()
+        movie_cover = list()
+        movie_title = list()
+        movie_activity = list()
+        travel_cover = list()
+        travel_title = list()
+        travel_activity = list()
+        other_cover = list()
+        other_title = list()
+        other_activity = list()
+        for activity in activities:
+            if(activity.tag.lower()=="music"):
+                music_cover.append(activity.cover)
+                music_title.append(activity.title)
+                music_activity.append(activity)
+            elif(activity.tag.lower()=="food"):
+                food_cover.append(activity.cover)
+                food_title.append(activity.title)
+                food_activity.append(activity)
+            elif(activity.tag.lower()=="movie"):
+                movie_cover.append(activity.cover)
+                movie_title.append(activity.title)
+                movie_activity.append(activity)
+            elif(activity.tag.lower()=="travel"):
+                travel_cover.append(activity.cover)
+                travel_title.append(activity.title)
+                travel_activity.append(activity)
+            else:
+                other_cover.append(activity.cover)
+                other_title.append(activity.title)
+                other_activity.append(activity)
+        music_counter = len(music_cover)
+        food_counter = len(food_cover)
+        movie_counter = len(movie_cover)
+        travel_counter = len(travel_cover)
+        other_counter = len(other_cover)
+        print music_counter
+        template_value = {
+                'music_counter':music_counter,
+                'music_cover':music_cover,
+                'music_title':music_title,
+                'music_activity':music_activity,
+                'food_counter':food_counter,
+                'food_cover':food_cover,
+                'food_title':food_title,
+                'food_activity':food_activity,
+                'movie_counter':movie_counter,
+                'movie_cover':movie_cover,
+                'movie_title':movie_title,
+                'movie_activity':movie_activity,
+                'travel_counter':travel_counter,
+                'travel_cover':travel_cover,
+                'travel_title':travel_title,
+                'travel_activity':travel_activity,
+                'other_counter':other_counter,
+                'other_cover':other_cover,
+                'other_title':other_title,
+                'other_activity':other_activity,
+
+        }
+        template =  JINJA_ENVIRONMENT.get_template('all_activities.html')
+        self.response.write(template.render(template_value))
+
 		
 
 application = webapp2.WSGIApplication([
@@ -333,6 +474,8 @@ application = webapp2.WSGIApplication([
 	('/img', Image_Show),
 	('/person', Person),
 	('/activity',Activity_page),
+        ('/all_activities',All_Activity),
+        ('/search',Search)
 ], debug = True)
 
 

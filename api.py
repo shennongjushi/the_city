@@ -43,6 +43,7 @@ class Activity(ndb.Model):
     # others
     like_number = ndb.IntegerProperty()
     take_number = ndb.IntegerProperty()
+    hot_number = ndb.IntegerProperty()
     date = ndb.DateTimeProperty(auto_now_add = True)#The create date
     cover = ndb.StringProperty()#Blobstore key
 
@@ -87,7 +88,12 @@ class Upload_api(blobstore_handlers.BlobstoreUploadHandler):
 	    new_start_date = datetime(int(new_start_date[0:4]), int(new_start_date[5:7]), int(new_start_date[8:10]), int(new_start_date[11:13]), int(new_start_date[14:16]))
 	    new_end_date = datetime(int(new_end_date[0:4]), int(new_end_date[5:7]), int(new_end_date[8:10]), int(new_end_date[11:13]), int(new_end_date[14:16]))
 	    #activity	
-	    activity = Activity(title = new_title, tag = new_tag, neighborhood = new_neighborhood, zipcode = new_zipcode, address = new_address, latitude = new_latitude, longitude = new_longitude, host = new_host, cover = blob_key, start_date = new_start_date, end_date = new_end_date, details = new_details, like_number = 0, take_number = 0)
+	    activity = Activity(title = new_title, tag = new_tag, neighborhood =
+                    new_neighborhood, zipcode = new_zipcode, address =
+                    new_address, latitude = new_latitude, longitude =
+                    new_longitude, host = new_host, cover = blob_key, start_date
+                    = new_start_date, end_date = new_end_date, details =
+                    new_details, like_number = 0, take_number = 0,hot_number = 0)
 	    activity_key = activity.put()
 	    #user
 	    user.my_activity.append(str(activity_key.id()))
@@ -273,6 +279,7 @@ class Like_api(webapp2.RequestHandler):
 	if action == "1" and (str(activity_id) not in guest.like_activity):
 	    like_number = activity.like_number + 1
 	    activity.like_number = activity.like_number + 1
+            activity.hot_number = activity.hot_number + 1
 	    activity.put()
 	    guest.like_activity.append(str(activity_id))
 	    guest.put()
@@ -280,6 +287,7 @@ class Like_api(webapp2.RequestHandler):
 	elif action == "0" and (str(activity_id) in guest.like_activity):
 	    like_number = activity.like_number - 1
 	    activity.like_number = activity.like_number - 1
+            activity.hot_number = activity.hot_number -1
 	    activity.put()
 	    guest.like_activity.remove(str(activity_id))
 	    guest.put()
@@ -315,6 +323,7 @@ class Take_api(webapp2.RequestHandler):
 	if action == "1" and (str(activity_id) not in guest.take_activity):
 	    take_number = activity.take_number + 1
 	    activity.take_number = activity.take_number + 1
+            activity.hot_number = activity.hot_number + 1
 	    activity.put()
 	    guest.take_activity.append(str(activity_id))
 	    guest.put()
@@ -322,6 +331,7 @@ class Take_api(webapp2.RequestHandler):
 	elif action == "0" and (str(activity_id) in guest.take_activity):
 	    take_number = activity.take_number - 1
 	    activity.take_number = activity.take_number - 1
+            activity.hot_number = activity.hot_number - 1
 	    activity.put()
 	    guest.take_activity.remove(str(activity_id))
 	    guest.put()

@@ -40,25 +40,26 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="index.html">The City</a>
+              <a class="navbar-brand" href="/">The City</a>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav">
                   <li class="active">
-			<a href="post.html">
+			<a href="/post">
 				<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> I want to Post
 			</a>
 			</li>
                   <li class="dropdown">
-                      <a href="all_activities.html" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
+                      <a href="/all_activities" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
                       <ul class="dropdown-menu">
-                          <li><a href="all_activities.html#music">Music</a></li>
-                          <li><a href="all_activities.html#movie">Movie</a></li>
-                          <li><a href="all_activities.html#travel">Travel</a></li>
-                          <li><a href="all_activities.html#food">Food</a></li>                    
+                          <li><a href="/all_activities#music">Music</a></li>
+                          <li><a href="/all_activities#movie">Movie</a></li>
+                          <li><a href="/all_activities#travel">Travel</a></li>
+                          <li><a href="/all_activities#food">Food</a></li>                    
+                          <li><a href="/all_activities#other">Other</a></li>                    
                       </ul>
                   </li>
-		  <li><a href="my_city.html">My City</a></li>
+		  <li><a href="/my_city">My City</a></li>
               </ul>
               <div class="col-sm-3 col-md-3 pull-right">
                   <form class="navbar-form" role="search">
@@ -75,11 +76,13 @@
       <div class="bs">
       <div class="row">
         <h2>All Activities</h2>
-	<ul class="nav nav-tabs nav-justified">
-  	  <li class="active"><a data-toggle="tab" href="#music">Music</a></li>
+	<ul class="nav nav-tabs nav-justified" id="type">
+  	  <li class="active">
+      <a data-toggle="tab" href="#music">Music</a></li>
   	  <li><a data-toggle="tab" href="#movie">Movie</a></li>
   	  <li><a data-toggle="tab" href="#travel">Travel</a></li>
   	  <li><a data-toggle="tab" href="#food">Food</a></li>
+  	  <li><a data-toggle="tab" href="#other">Other</a></li>
 	</ul>
       </div>
       <div class="tab-content">
@@ -87,72 +90,64 @@
             <div class="row">
 	      </br>
 	      <p>Music</p>
+        {% for i in range(music_counter)%}
               <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
+                <a href="/activity?id={{music_activity[i].key.id()}}"><img src=/img?key={{music_cover[i]}} width="250px"
+                  height="250px">{{music_title[i]}}</a>
               </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
+        {% endfor %}
             </div>
           </div>
           <div id="movie" class="tab-pane fade">
             <div class="row">
 	      </br>
 	      <p>Movie</p>
+        {% for i in range(movie_counter)%}
               <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
+                <a href="/activity?id={{movie_activity[i].key.id()}}"><img
+                  src="/img?key={{movie_cover[i]}}" width="250px"
+                  height="250px">{{movie_title[i]}}</a>
               </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
+        {% endfor %}
             </div>
           </div>
           <div id="travel" class="tab-pane fade">
             <div class="row">
 	      </br>
 	      <p>Travel</p>
+        {% for i in range(travel_counter)%}
               <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
+                <a href="/activity?id={{travel_activity[i].key.id()}}"><img
+                  src="/img?key={{travel_cover[i]}}" width="250px"
+                  height="250px">{{travel_title[i]}}</a>
               </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
+        {% endfor %}
             </div>
           </div>
           <div id="food" class="tab-pane fade">
             <div class="row">
 	      </br>
 	      <p>Food</p>
+        {% for i in range(food_counter)%}
               <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
+                <a href="/activity?id={{food_activity[i].key.id()}}"><img
+                  src="/img?key={{food_cover[i]}}" width="250px"
+                  height="250px">{{food_title[i]}}</a>
               </div>
+        {% endfor %}
+            </div>
+          </div>
+          <div id="other" class="tab-pane fade">
+            <div class="row">
+	      </br>
+	      <p>Other</p>
+        {% for i in range(other_counter)%}
               <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
+                <a href="/activity?id={{other_activity[i].key.id()}}"><img
+                  src="/img?key={{other_cover[i]}}" width="250px"
+                  height="250px">{{other_title[i]}}</a>
               </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
-              <div class="col-md-3">
-                <a href=""><img src="" width="250px" height="250px"></a>
-              </div>
+        {% endfor %}
             </div>
           </div>
       </div>
