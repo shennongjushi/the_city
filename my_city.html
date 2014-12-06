@@ -30,6 +30,9 @@
        background-color: #f5f5f5;
        border-radius: 4px;
    }
+   .my_thumbnail1 img{
+	height:300px;
+   }
 </style>
 <script src="https://maps.googleapis.com/maps/api/js"></script>
 <script>
@@ -112,7 +115,7 @@ function placeMarker(location) {
       <div class="row" id = "sb">
         <div class="col-sm-7 blog-main">
           <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-3 ">
 	     {% if photo %}
               <img src="/img?key={{photo}}" class="img-thumbnail" width="200px" height="200px">
 	     {% else %}

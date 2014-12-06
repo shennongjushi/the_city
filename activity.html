@@ -42,7 +42,70 @@
 	height:85px;
    }
 </style>
-<script src="https://maps.googleapis.com/maps/api/js"></script>
+<!--style for big&map direction-->
+    <style>
+      html,body, #map-canvas2 {
+        margin: 0;
+	padding: 0;
+	height: 100%;
+      }
+      #map-canvas2{
+	width:700px;
+	height:800px;
+      }
+      #panel {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        margin-right: 50px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+      }
+    </style>
+    <style>
+      #directions-panel {
+        height: 800px;
+        float: right;
+        width: 450px;
+        overflow: auto;
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        margin-left: 130px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+      }
+
+      #control {
+        background: #fff;
+        padding: 5px;
+        font-size: 14px;
+        font-family: Arial;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 2px rgba(33, 33, 33, 0.4);
+        display: none;
+      }
+      @media print {
+        #map-canvas {
+          height: 500px;
+          margin: 0;
+        }
+
+        #directions-panel {
+          float: none;
+          width: auto;
+        }
+      }
+      .modal_very_large{
+	  width:1200px;
+	}
+
+    </style>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <link rel="stylesheet" type="text/css" href="css/jquery.datetimepicker.css"/ >
 <script src="js/jquery.js"></script>
 <script src="js/jquery.datetimepicker.js"></script>
@@ -54,7 +117,7 @@ var marker = null;
 function initialize() {
         var mapCanvas = document.getElementById('map-canvas');
         var mapOptions = {
-                center: new google.maps.LatLng(30.2861, -97.7394),
+                center: new google.maps.LatLng({{latitude}}, {{longitude}}),
                 zoom: 10,
                 mapTypeId: google.maps.MapTypeId.ROADMAP
         }
@@ -120,6 +183,7 @@ function initialize() {
               </div>
               <div class="col-md-6">
                 <h2>{{title}}</h2>
+	        <a href="{{google}}">Google Calendar</a>
 	        <h4><strong>Time: </strong></h4>
 		<h5>{{start_date}} -- {{end_date}}</h5>
 	        <h4><strong>Location: </strong></h4>
@@ -138,7 +202,11 @@ function initialize() {
 		{% else %}
                 <button id="take" class="btn btn-default" type="submit" data-toggle="modal" data-target=".take2"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{take_number}} Take</button></br></br>
 		{% endif %}
-                <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Google Calender</button></br>
+		{% if has_credentials %}
+                <button class="btn btn-default" type="submit" onclick="window.location.href='{{google_calendar_url}}'"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Google Calendar</button></br>
+		{% else %}
+                <button class="btn btn-default" type="submit" data-toggle="modal" data-target=".google_calendar"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Google Calendar</button></br>
+		{% endif %}
               </div>
 <script type="text/javascript">
 	function like(){
@@ -235,33 +303,73 @@ function initialize() {
                 dataType:"json",
 		data:JSON.stringify({activity_id:"{{activity_id}}",guest_id:"{{guest}}",action:action, comment:comment}),
                 success: function(data){
-			if(data.action == "0"){
-		            $('#take').html('<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> '+data.take+' take');
-			    alert("You have add the take activity");
-			    $('#take_action').val("0");
-			    $('#take').attr('data-target','.take2');
-		            if(data.author){
-			        console.log(data.author);
-		                $("#user_chat").append( "<b>" + data.author + "</b> saied" +
-         	                "<blockquote>" + data.content + "</blockquote>" );
-		            }
-		            else{
-		                $( "#user_chat" ).append( "<b>An anonymous person</b> saied:" +
-         	                "<blockquote>" + data.content + "</blockquote>" ); 
-		            }
-			}
-			else{
-		            $('#take').html('<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> '+data.take+' take');
-			    alert("You have canceled the take activity");
-			    $('#take_action').val("1");
-			    $('#take').attr('data-target','.take');
-		        }
+			//if(data.action == "0"){
+		        //    $('#take').html('<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> '+data.take+' take');
+			//    alert("You have add the take activity");
+			//    $('#take_action').val("0");
+			//    $('#take').attr('data-target','.take2');
+		        //    if(data.author){
+			//        console.log(data.author);
+		        //        $("#user_chat").append( "<b>" + data.author + "</b> saied" +
+         	        //        "<blockquote>" + data.content + "</blockquote>" );
+		        //    }
+		        //    else{
+		        //        $( "#user_chat" ).append( "<b>An anonymous person</b> saied:" +
+         	        //        "<blockquote>" + data.content + "</blockquote>" ); 
+		        //    }
+			//}
+			//else{
+		        //    $('#take').html('<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> '+data.take+' take');
+			//    alert("You have canceled the take activity");
+			//    $('#take_action').val("1");
+			//    $('#take').attr('data-target','.take');
+		        //}
+		   if(data.action == '0'){
+		       alert("You have add the take activity");
+		   }
+		   else{
+		       alert("You have canceled the take activity");
+		   }
+		   window.location.href="/activity?id={{activity_id}}";
 	        }
           });
 	}
 </script>
-<!--Dialog-->
-
+<!--Dialog Google Calendar -->
+<div class="modal fade google_calendar" id="model2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">I want to take</h4>
+      </div>
+      <div class="modal-body">
+        <!--<button type="button" class="btn btn-default" data-dismiss="modal" onclick="window.location.href='{{google_calendar_url}}'">Add to Google Calendar directly</button>-->
+        <a href="{{google_calendar_url}}">Add to Google Calendar directly</a>
+	<h4> or </h4>
+        <!--<button type="button" class="btn btn-default" data-dismiss="modal" onclick="google_calendar()">Authorize us, so you can add to Google Calendar when you click "take"</button>-->
+        <a href="{{authorize_url}}">Authorize us, so you can add to Google Calendar when you click "take"</a>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--  Dialog Google Calendar -->
+<!--google calendar function-->
+<script type="text/javascript">
+    function google_calendar(){
+	  if('{{guest}}'){
+	    console.log('{{ authorize_url }}')
+	    window.location.href="{{ authorize_url }}";
+	  }
+	  else{
+	    alert("Please login first!");
+	  }
+    }
+</script>
+<!--google calendar function-->
             </div></br>
 	    <h2>Activity Details</h2>
 	    <p>{{details}}</p>
@@ -307,34 +415,155 @@ function initialize() {
 	    <h4>Host</h4>
             <a href="/person?user={{host}}" class="my_thumbnail2"><img src="img?key={{host_photo}}" class="img-thumbnail" width="100px" height="100px"></br>{{host_nick}}</a></br></br>
 	    <h4>Paticipates</h4>
+	    {% set j_counter = 0 %}
+	    {% for i in range(rows) %}
 	    <div class="row">
+	      {% if i!=rows-1 or (i==rows-1 and guests_len%3==0) %}
+	      {% for m in range(3) %}
 	      <div class="col-md-4 my_thumbnail3">
-		{% if all_guests %}
-                <a href="/person?user={{all_guests[0].key.id()}}"><img src="/img?key={{all_guests[0].photo}}" class="img-thumbnail" width="100px" height="100px"></a>
-		{% endif %}
+                <a href="/person?user={{all_guests[j_counter+m].key.id()}}"><img src="/img?key={{all_guests[j_counter+m].photo}}" class="img-thumbnail" width="100px" height="100px"></a>
 	      </div>
-	      <div class="col-md-4">
-                <a href=""><img src="" class="img-thumbnail" width="100px" height="100px"></a>
+	      {% endfor %}
+	      {% set j_counter = j_counter + 3 %}
+	      {% else %}
+	      {% for m in range(guests_len%3) %}
+	      <div class="col-md-4 my_thumbnail3">
+                <a href="/person?user={{all_guests[j_counter+m].key.id()}}"><img src="/img?key={{all_guests[j_counter+m].photo}}" class="img-thumbnail" width="100px" height="100px"></a>
 	      </div>
-	      <div class="col-md-4">
-                <a href=""><img src="" class="img-thumbnail" width="100px" height="100px"></a>
-	      </div>
-	    </div></br>
-	    <div class="row">
-	      <div class="col-md-4">
-                <a href=""><img src="" class="img-thumbnail" width="100px" height="100px"></a>
-	      </div>
-	      <div class="col-md-4">
-                <a href=""><img src="" class="img-thumbnail" width="100px" height="100px"></a>
-	      </div>
-	      <div class="col-md-4">
-                <a href=""><img src="" class="img-thumbnail" width="100px" height="100px"></a>
-	      </div>
-	    </div></br>
+	      {% endfor %}
+	      {% endif %}
+	      </div></br>
+	      {% endfor %}
 	    <div class="row">
 		<h4 style="margin:20px">Location</h4>
 		<div id="map-canvas"></div>
 	    </div>
+	    <div class="row">
+                <button class="btn btn-default" type="submit" style="margin-left:75px;" data-toggle="modal" data-target=".big_map"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Big map and direction</button></br>
+	    </div>
+<!--Dialog-->
+<!-- Big map & direction -->
+<div class="modal fade big_map" id="model" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal_very_large">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="myModalLabel">Big map and get direction</h4>
+      </div>
+      <div class="modal-body">
+	<div class="container">
+	  <div class="row">
+             <div id="control">
+                <strong>Destination:</strong>
+                <input type="text" id="dest" value="{{address}}" readonly>
+             </div>
+             <div id="directions-panel"></div>
+            <div id="map-canvas2"></div>
+	  </div>
+        <input id="latitude" type="hidden">
+        <input id="longitude" type="hidden">
+      <!--</div>-->
+	</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--Dialog-->
+<!--script-->
+    <script>
+var directionsDisplay;
+var directionsService = new google.maps.DirectionsService();
+
+function initialize() {
+  directionsDisplay = new google.maps.DirectionsRenderer();
+  var mapOptions = {
+    zoom: 10,
+    center: new google.maps.LatLng(30.2500, -97.7500)
+  };
+  var map = new google.maps.Map(document.getElementById('map-canvas2'),
+      mapOptions);
+  directionsDisplay.setMap(map);
+  directionsDisplay.setPanel(document.getElementById('directions-panel'));
+
+  var control = document.getElementById('control');
+  control.style.display = 'block';
+  map.controls[google.maps.ControlPosition.TOP_CENTER].push(control);
+ 
+  $(".big_map").on("shown.bs.modal", function(e) {
+    google.maps.event.trigger(map, "resize");
+    return map.setCenter(new google.maps.LatLng(30.2500, -97.7500)); // Set here center map coordinates
+  });
+}
+
+function calcRoute() {
+  var dest = document.getElementById('dest').value;
+  var my_lat = document.getElementById('latitude').value;
+  var my_lng = document.getElementById('longitude').value;
+  var my = new google.maps.LatLng(my_lat,my_lng); 
+  var request = {
+    origin: my,
+    destination: dest,
+    travelMode: google.maps.TravelMode.DRIVING
+  };
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);
+    }
+  });
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+  </head>
+  <body>
+    <div id="control">
+      <strong>Destination:</strong>
+      <input type="text" id="dest" value="university of texas at austin">
+    </div>
+    <!--<div id="directions-panel"></div>-->
+    <div id="map-canvas"></div>
+    <input id="latitude" type="hidden">
+    <input id="longitude" type="hidden">
+    <!-- Add the script for geolocation  -->
+      <script>
+                        var x = document.getElementById("latitude");
+                        var y = document.getElementById("longitude");
+                        
+                        window.onload=function(){
+                        //console.log("test for google_map lalalal")
+                           if (navigator.geolocation) {
+                               navigator.geolocation.getCurrentPosition(addPosition, randomPosition,{enableHighAcuracy: true});
+                           } else { 
+                               alert("Geolocation is not supported by this browser!");
+                           }
+                        }
+
+                        function addPosition(position) {
+                            console.log("test for google_map lalalal")
+                            x.value=position.coords.latitude;
+                            console.log(position.coords.latitude);
+                            y.value=position.coords.longitude;
+                            console.log(position.coords.longitude);
+			    calcRoute();
+                        }
+                        function randomPosition(error){
+                            switch(error.code){
+                               case error.PERMISSION_DENIED:  
+                                   alert("you have denied access to your position");  
+                                   break;  
+                               case error.POSITION_UNAVAILABLE:  
+                                   alert("there was a problem getting yout position");  
+                                   break;  
+                               case error.TIMEOUT:  
+                                   alert("The application has timed out attempting to get your location");  
+                                   break;   
+                            }
+                        }
+              </script>
+<!--script-->
 	  </div></br>
 	</div>
       </div>

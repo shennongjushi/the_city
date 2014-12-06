@@ -20,6 +20,13 @@ import jinja2
 import re
 import random
 import urllib2
+import httplib2
+import logging
+import pickle
+from apiclient import discovery
+from oauth2client import appengine
+from oauth2client import client
+from google.appengine.api import memcache
 
 def larger0(someitem):
     return someitem > 0
@@ -36,6 +43,44 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 JINJA_ENVIRONMENT.tests["larger0"] = larger0
 JINJA_ENVIRONMENT.tests["larger1"] = larger1
 JINJA_ENVIRONMENT.tests["larger2"] = larger2
+
+##########################################
+#           Google Calendar Plugin       #
+##########################################
+# CLIENT_SECRETS, name of a file containing the OAuth 2.0 information for this
+# application, including client_id and client_secret, which are found
+# on the API Access tab on the Google APIs
+# Console <http://code.google.com/apis/console>
+CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
+
+# Helpful message to display in the browser if the CLIENT_SECRETS file
+# is missing.
+MISSING_CLIENT_SECRETS_MESSAGE = """
+<h1>Warning: Please configure OAuth 2.0</h1>
+<p>
+To make this sample run you will need to populate the client_secrets.json file
+found at:
+</p>
+<p>
+<code>%s</code>.
+</p>
+<p>with information found on the <a
+href="https://code.google.com/apis/console">APIs Console</a>.
+</p>
+""" % CLIENT_SECRETS
+
+http = httplib2.Http(memcache)
+service = discovery.build("calendar", "v3", http=http)
+decorator = appengine.oauth2decorator_from_clientsecrets(
+    CLIENT_SECRETS,
+    #scope='https://www.googleapis.com/auth/plus.me',
+    scope='https://www.googleapis.com/auth/calendar',
+    message=MISSING_CLIENT_SECRETS_MESSAGE)
+
+#####################################################
+#		Google Calendar Plugin		    #
+#####################################################
+
 class Index(webapp2.RequestHandler):
     def get(self):
         music_activity = list()
@@ -208,6 +253,7 @@ class My_city(webapp2.RequestHandler):
 	    sub_me_number = 0
 	    greetings_author=list()
 	    greetings_content = list()
+	    greetings = list()
             login_url = users.create_login_url(self.request.uri)
             if responses.status == 200:
 		data = json.loads(responses.read())
@@ -220,8 +266,6 @@ class My_city(webapp2.RequestHandler):
 		introduce = data['introduce']
 		interest = data['interest']
 		sub_me_number = data['sub_me_number']
-	        greetings_author = data['greetings_author']
-	        greetings_content = data['greetings_content']
 		greetings = Greeting_person.query(ancestor=ndb.Key(Webusers, str(user.email()))).order(Greeting_person.date).fetch()
 		for activity in taken:
 		    take_activity.append(ndb.Key(Activity, long(activity)).get())
@@ -242,13 +286,10 @@ class My_city(webapp2.RequestHandler):
 		'len_interest':len(interest_tag),
 		'gender':gender,
 		'photo':photo,
-		'greetings_author':greetings_author,
-		'greetings_content':greetings_content,
-		'greetings_number':len(greetings_author),
 		'user': user.email(),
 		'guest': user.email(),
 		'greetings':greetings,
-		'login_url':login_url
+		'login_url':login_url,
 	    }
 	    template = JINJA_ENVIRONMENT.get_template('my_city.html')
 	    self.response.write(template.render(template_value))
@@ -309,8 +350,6 @@ class Person(webapp2.RequestHandler):
 		    post_activity.append(ndb.Key(Activity, long(activity)).get())
 		for tag in interest:
 		    interest_tag.append(str(tag))
-	        greetings_author = data['greetings_author']
-	        greetings_content = data['greetings_content']
 		greetings = Greeting_person.query(ancestor=ndb.Key(Webusers, str(user))).order(Greeting_person.date).fetch()
 	    template_value = {
 		'nick': nick,
@@ -323,9 +362,6 @@ class Person(webapp2.RequestHandler):
 		'len_interest':len(interest_tag),
 		'gender':gender,
 		'photo':photo,
-		'greetings_author':greetings_author,
-		'greetings_content':greetings_content,
-		'greetings_number':len(greetings_author),
 		'user': user,
 		'guest': guest_id,
 		'greetings':greetings
@@ -334,6 +370,7 @@ class Person(webapp2.RequestHandler):
 	    self.response.write(template.render(template_value))
 
 class Activity_page(webapp2.RequestHandler):
+    @decorator.oauth_aware
     def get(self):	    
 	guest_id = ''
 	user = users.get_current_user()
@@ -358,8 +395,15 @@ class Activity_page(webapp2.RequestHandler):
 	    for user in all_users:
 		if str(activity_id) in user.take_activity:
 		    all_guests.append(user)
-		    print user.nickname
-
+	    if len(all_guests)%3!=0:
+		rows = len(all_guests)/3 + 1
+	    else:
+		rows = len(all_guests)/3
+	    guests_len = len(all_guests)
+	####### google_calendar_date_calculate ######
+	    calendar_start = data['calendar_start']
+	    calendar_end = data['calendar_end']
+	    google_calendar_url="https://www.google.com/calendar/render?dates="+calendar_start+"/"+calendar_end+"&details=activity:+http://olenew2014.appspot.com/activity?id="+str(activity_id)+"&text="+data['title']+"&action=TEMPLATE&sprop=http://olenew2014.appspot.com/activity?id="+str(activity_id)+"&trp=False&location="+data['address']+"&sf=true&output=xml#f"
 	    template_value = {
 	    	'title': data['title'],
 		'start_date':data['start_date'],
@@ -385,7 +429,12 @@ class Activity_page(webapp2.RequestHandler):
 		'all_date':data['all_date'],
 		'more':len(data['all_date'])-1,
 		'comments':comments,
-		'all_guests':all_guests
+		'all_guests':all_guests,
+		'guests_len':guests_len,
+		'rows':rows,
+        	'authorize_url': decorator.authorize_url(),
+        	'has_credentials': decorator.has_credentials(),
+		'google_calendar_url':google_calendar_url,
 	    }
 	    print "like_action:" + str(data['like_action'])
 	    template = JINJA_ENVIRONMENT.get_template('activity.html')
@@ -476,6 +525,7 @@ application = webapp2.WSGIApplication([
 	('/activity',Activity_page),
         ('/all_activities',All_Activity),
         ('/search',Search)
+        (decorator.callback_path, decorator.callback_handler()),
 ], debug = True)
 
 
