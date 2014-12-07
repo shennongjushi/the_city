@@ -238,7 +238,7 @@ class My_city(webapp2.RequestHandler):
 		'user_id':str(user.email())
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-            conn = httplib.HTTPConnection("localhost","8888")
+            conn = httplib.HTTPConnection("olenew2014.appspot.com")
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -316,7 +316,7 @@ class Person(webapp2.RequestHandler):
 		'user_id':str(user)
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-            conn = httplib.HTTPConnection("localhost","8888")
+            conn = httplib.HTTPConnection("olenew2014.appspot.com")
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -382,8 +382,12 @@ class Activity_page(webapp2.RequestHandler):
 	'guest_id': guest_id
 	}
 	comments = Activity_comment.query(ancestor=ndb.Key(Activity, long(activity_id))).order(Activity_comment.date).fetch()
+	images = Imag.query(ancestor = ndb.Key(Activity, long(activity_id))).order(Imag.date).fetch()
+	image_urls = list()
+	for image in images:
+	    image_urls.append(image.url)
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
-        conn = httplib.HTTPConnection("localhost","8888")
+        conn = httplib.HTTPConnection("olenew2014.appspot.com")
         conn.request("POST", "/api/activity", json.dumps(requests), headers)
         responses = conn.getresponse()
         if responses.status == 200:
@@ -435,6 +439,7 @@ class Activity_page(webapp2.RequestHandler):
         	'authorize_url': decorator.authorize_url(),
         	'has_credentials': decorator.has_credentials(),
 		'google_calendar_url':google_calendar_url,
+		'image_urls':image_urls,
 	    }
 	    print "like_action:" + str(data['like_action'])
 	    template = JINJA_ENVIRONMENT.get_template('activity.html')
@@ -512,7 +517,18 @@ class All_Activity(webapp2.RequestHandler):
         template =  JINJA_ENVIRONMENT.get_template('all_activities.html')
         self.response.write(template.render(template_value))
 
-		
+class Image_Upload(webapp2.RequestHandler):
+    def get(self):
+	activity_id = self.request.get('id')
+	finish = self.request.get('finish')
+	image_upload_url = blobstore.create_upload_url('/api/image_upload')
+	template_value = {
+		'activity_id':str(activity_id),
+		'finish':str(finish),
+		'image_upload_url':image_upload_url
+	}
+        template = JINJA_ENVIRONMENT.get_template('image_upload.html')
+        self.response.write(template.render(template_value))
 
 application = webapp2.WSGIApplication([
 	('/post', Post_activity),
@@ -524,8 +540,8 @@ application = webapp2.WSGIApplication([
 	('/person', Person),
 	('/activity',Activity_page),
         ('/all_activities',All_Activity),
-        ('/search',Search)
         (decorator.callback_path, decorator.callback_handler()),
+	('/image_upload', Image_Upload),
 ], debug = True)
 
 

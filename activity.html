@@ -109,6 +109,9 @@
 <link rel="stylesheet" type="text/css" href="css/jquery.datetimepicker.css"/ >
 <script src="js/jquery.js"></script>
 <script src="js/jquery.datetimepicker.js"></script>
+<!--Lightbox-->
+<script src="js/lightbox.min.js"></script>
+<link href="css/lightbox.css" rel="stylesheet" />
 <script>
 var map;
 var marker = null;
@@ -141,25 +144,25 @@ function initialize() {
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="index.html">The City</a>
+              <a class="navbar-brand" href="/">The City</a>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav">
                   <li class="active">
-			<a href="post.html">
+			<a href="/post">
 				<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> I want to Post
 			</a>
 			</li>
                   <li class="dropdown">
-                      <a href="all_activities.html" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
+                      <a href="/all_activities" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
                       <ul class="dropdown-menu">
-                          <li><a href="all_activities.html#music">Music</a></li>
-                          <li><a href="all_activities.html#movie">Movie</a></li>
-                          <li><a href="all_activities.html#travel">Travel</a></li>
-                          <li><a href="all_activities.html#food">Food</a></li>                    
+                          <li><a href="/all_activities#music">Music</a></li>
+                          <li><a href="/all_activities#movie">Movie</a></li>
+                          <li><a href="/all_activities#travel">Travel</a></li>
+                          <li><a href="/all_activities#food">Food</a></li>                    
                       </ul>
                   </li>
-		  <li><a href="my_city.html">My City</a></li>
+		  <li><a href="/my_city">My City</a></li>
               </ul>
               <div class="col-sm-3 col-md-3 pull-right">
                   <form class="navbar-form" role="search">
@@ -183,7 +186,6 @@ function initialize() {
               </div>
               <div class="col-md-6">
                 <h2>{{title}}</h2>
-	        <a href="{{google}}">Google Calendar</a>
 	        <h4><strong>Time: </strong></h4>
 		<h5>{{start_date}} -- {{end_date}}</h5>
 	        <h4><strong>Location: </strong></h4>
@@ -207,6 +209,18 @@ function initialize() {
 		{% else %}
                 <button class="btn btn-default" type="submit" data-toggle="modal" data-target=".google_calendar"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Google Calendar</button></br>
 		{% endif %}
+	 <!--facebook-->
+                  <div class="fb-share-button" data-href="http://olenew2014.appspot.com/activity?id={{activity_id}}" data-layout="button"></div>
+		  <div class="fb-login-button" data-max-rows="1" data-size="small" data-show-faces="false" data-auto-logout-link="true"></div>
+		<div id="fb-root"></div>
+		<script>(function(d, s, id) {
+  			var js, fjs = d.getElementsByTagName(s)[0];
+  			if (d.getElementById(id)) return;
+  			js = d.createElement(s); js.id = id;
+  			js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&appId=617036095066973&version=v2.0";
+  			fjs.parentNode.insertBefore(js, fjs);
+			}(document, 'script', 'facebook-jssdk'));</script>
+	 <!--facebook-->
               </div>
 <script type="text/javascript">
 	function like(){
@@ -373,6 +387,16 @@ function initialize() {
             </div></br>
 	    <h2>Activity Details</h2>
 	    <p>{{details}}</p>
+	    <h2>Activity Images<a href="#" class="btn btn-default" onclick="openNew()">Add Image</a></h2>
+<script>
+function openNew() {
+	window.open("/image_upload?id={{activity_id}}",null, "height=200,width=300,status=yes,toolbar=no,menubar=no,location=no");
+}
+</script>
+	    {% for image_url in image_urls %}
+            <a href="{{image_url}}" data-lightbox="roadtrip"><img id="image_style" src="{{image_url}}" width="80px" height="80px"></a>
+	    {% endfor %}
+	    </br>
 	    <h2>Chat</h2>
 	    {% for comment in comments%}
 	    {% if comment.author %}
@@ -493,6 +517,7 @@ function initialize() {
  
   $(".big_map").on("shown.bs.modal", function(e) {
     google.maps.event.trigger(map, "resize");
+    map.setZoom(12);
     return map.setCenter(new google.maps.LatLng(30.2500, -97.7500)); // Set here center map coordinates
   });
 }

@@ -312,7 +312,7 @@ class Activity_api(webapp2.RequestHandler):
 		
 	    if activity.end_date:
 		calendar_end = change_time_format(activity.end_date,0)
-	   ############################################## 
+	   #################### Imag #################### 
 	    responses = {
 		'title':activity.title,
 		'start_date':start_date,
@@ -462,6 +462,19 @@ class Take_api(webapp2.RequestHandler):
         self.response.headers['Accept'] = "text/plain"
         self.response.write(json.dumps(responses))
 
+class Image_upload_api(blobstore_handlers.BlobstoreUploadHandler):
+    def post(self):
+	activity_id = self.request.get('activity_id')
+	activity = ndb.Key(Activity, long(activity_id)).get()	
+	image = self.get_uploads('image')
+	if image and activity:
+	    blob_info = image[0]
+	    image_new = Imag(parent=ndb.Key(Activity, long(activity_id)))
+	    image_new.blob_key = str(blob_info.key())
+	    image_new.url = '/img?key='+str(blob_info.key())
+	    image_new.put()
+	self.redirect('/image_upload?finish=1')
+
 application = webapp2.WSGIApplication([
     ('/api/post',Upload_api),
     ('/api/profile',Profile_api),
@@ -472,4 +485,12 @@ application = webapp2.WSGIApplication([
     ('/api/like', Like_api),
     ('/api/take', Take_api),
     ('/api/activity_comment',Activity_comment_api),
+    ('/api/image_upload', Image_upload_api),
 ], debug=True)
+
+
+
+
+
+
+
