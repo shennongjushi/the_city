@@ -83,6 +83,9 @@ decorator = appengine.oauth2decorator_from_clientsecrets(
 
 class Index(webapp2.RequestHandler):
     def get(self):
+        keyword = self.request.get('q')
+        if keyword:
+            print keyword
         music_activity = list()
         movie_activity = list()
         travel_activity = list()
@@ -513,6 +516,12 @@ class All_Activity(webapp2.RequestHandler):
         self.response.write(template.render(template_value))
 
 		
+
+class Search(webapp2.RequestHandler):
+            template_value = dict()
+	    template = JINJA_ENVIRONMENT.get_template('search.html')
+	    self.response.write(template.render(template_value))
+
 
 application = webapp2.WSGIApplication([
 	('/post', Post_activity),
