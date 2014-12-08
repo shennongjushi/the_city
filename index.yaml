@@ -1,0 +1,24 @@
+indexes:
+- kind: Greeting_person
+  ancestor: yes
+  properties:
+  - name: date
+- kind: Activity_comment
+  ancestor: yes
+  properties:
+  - name: date
+- kind: Activity
+  ancestor: yes
+  properties:
+  - name: hot_number
+    direction: desc
+- kind: Imag
+  ancestor: yes
+  properties:
+  - name: date
+- kind: Activity
+  ancestor: yes
+  properties:
+  - name: start_date
+
+
