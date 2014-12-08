@@ -1,0 +1,29 @@
+<html>
+  <head>
+  	<link type="text/css" rel="stylesheet" href="/css/bootstrap.css" />
+  	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  	<script src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js"></script>
+  	<title>Upload Activity Image</title>
+  </head>  
+  <body>
+ {% if not finish %}
+  	<div class="container">
+ 		<form class="form form-validate" role="form" name="changePic" method="post" action="{{image_upload_url}}" enctype="multipart/form-data">
+			<div class="form-group">
+				<label for="profilePicture" class="control-label">Upload a picture for this activity</label>
+				<input type="file" class="form-control" name="image" accept="image/*" required></input>
+				<input type="hidden" name="activity_id" value="{{activity_id}}">
+			</div>
+			<button type="submit" class="btn btn-primary">Upload</button>
+		</form>
+{% else %}
+	<p>Upload Successfully</p>
+{% endif %}
+		<script>
+		$(".form-validate").validate();
+		</script>
+	
+	</div>
+  </body>
+</html>
