@@ -12,6 +12,7 @@ import os
 import pickle
 import logging
 import httplib2
+import math
 
 from apiclient import discovery
 from oauth2client import appengine
@@ -183,7 +184,8 @@ class Profile_api(blobstore_handlers.BlobstoreUploadHandler):
 	user_query.nickname = self.request.get('nick')
 	user_query.gender = self.request.get('gender')
 	birthday_ = self.request.get('birthday')
-	user_query.birthday = datetime(int(birthday_[0:4]),int(birthday_[5:7]),int(birthday_[8:10]))
+	if birthday_:
+	    user_query.birthday = datetime(int(birthday_[0:4]),int(birthday_[5:7]),int(birthday_[8:10]))
 	user_query.introduce = self.request.get('introduce')
 	#interest
 	if user_query.interest:
@@ -205,10 +207,10 @@ class Person_api(webapp2.RequestHandler):
         user_id = requests['user_id']
 	user = ndb.Key(Webusers, str(user_id)).get()
 	users = Webusers.query().fetch()
-	i = 0
+	subscribe_me_id = list()
 	for each in users:
 	    if user_id in each.subscribe:
-		i = i + 1
+		subscribe_me_id.append(each.key.id())
 	responses = {
 	    'taken': user.take_activity,
 	    'like': user.like_activity,
@@ -217,7 +219,8 @@ class Person_api(webapp2.RequestHandler):
 	    'introduce':user.introduce,
 	    'interest':user.interest,
 	    'photo':user.photo,
-	    'sub_me_number': i,
+	    'sub_me': subscribe_me_id,
+	    'i_sub': user.subscribe,
 	    'gender':user.gender,
 	}
         self.response.headers['Content-Type'] = "application/json"
@@ -267,9 +270,14 @@ class Subscribe_api(webapp2.RequestHandler):
     def post(self):
 	user_id = self.request.get('user')
 	guest_id = self.request.get('guest')
+	action = self.request.get('action')
 	guest = ndb.Key(Webusers, str(guest_id)).get()
-	guest.subscribe.append(str(user_id))
-	guest.put()	
+	if user_id not in guest.subscribe and action == 'subscribe':
+	    guest.subscribe.append(str(user_id))
+	    guest.put()
+	if user_id in guest.subscribe and action == 'unsubscribe':
+	    guest.subscribe.remove(str(user_id))
+	    guest.put()
 	self.redirect('/person?user=%s' %user_id)
 	   
 class Activity_api(webapp2.RequestHandler):
@@ -475,6 +483,44 @@ class Image_upload_api(blobstore_handlers.BlobstoreUploadHandler):
 	    image_new.put()
 	self.redirect('/image_upload?finish=1')
 
+############### Search Nearby ##################
+def distance(origin, destination):
+    lat1, lon1 = origin
+    lat2, lon2 = destination
+    #radius = 6371 # km
+    radius = 3958.75 #mi
+    dlat = math.radians(lat2-lat1)
+    dlon = math.radians(lon2-lon1)
+    a = math.sin(dlat/2) * math.sin(dlat/2) + math.cos(math.radians(lat1)) \
+        * math.cos(math.radians(lat2)) * math.sin(dlon/2) * math.sin(dlon/2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    d = round(radius * c,4)
+    return d
+
+class Nearby(webapp2.RequestHandler):
+    def post(self):
+	requests = json.loads(self.request.body)
+	request_radius = requests['radius']
+	latitude = requests['latitude']
+	longitude = requests['longitude']
+        activity_all = Activity.query(ndb.AND(Activity.latitude!=None, Activity.latitude!="")).fetch()
+  	activity_all = sorted(activity_all,key=lambda activity: distance((float(activity.latitude),float(activity.longitude)),(float(latitude),float(longitude))))
+	if request_radius:
+ 	    search_result = [activity for activity in activity_all if distance((float(activity.latitude),float(activity.longitude)),(float(latitude),float(longitude))) < float(request_radius)]
+	else:
+	    search_result = activity_all
+	result=dict()
+	result['markers']=list()
+	for i in range(len(search_result)):
+	    marker = dict()
+	    marker['cover'] = search_result[i].cover
+	    marker['latitude'] = search_result[i].latitude
+	    marker['longitude'] = search_result[i].longitude
+	    result['markers'].append(marker)
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.headers['Accept'] = "text/plain"
+        self.response.write(json.dumps(result))
+
 application = webapp2.WSGIApplication([
     ('/api/post',Upload_api),
     ('/api/profile',Profile_api),
@@ -486,6 +532,7 @@ application = webapp2.WSGIApplication([
     ('/api/take', Take_api),
     ('/api/activity_comment',Activity_comment_api),
     ('/api/image_upload', Image_upload_api),
+    ('/api/nearby', Nearby),
 ], debug=True)
 
 

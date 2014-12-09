@@ -231,14 +231,18 @@ class Profile_edit(webapp2.RequestHandler):
 class My_city(webapp2.RequestHandler):
     def get(self):
 	user = users.get_current_user()
+	if user:
+	    get_user = ndb.Key(Webusers, str(user.email())).get()
 	if not user:
 	    self.redirect(users.create_login_url('/my_city'))
+	elif not get_user:
+	    self.redirect('/profile_create')
 	else:
 	    requests = {
 		'user_id':str(user.email())
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-            conn = httplib.HTTPConnection("olenew2014.appspot.com")
+            conn = httplib.HTTPConnection("localhost","8888")
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -250,7 +254,6 @@ class My_city(webapp2.RequestHandler):
 	    photo = ''
 	    gender = ''
 	    interest_tag = list()
-	    sub_me_number = 0
 	    greetings_author=list()
 	    greetings_content = list()
 	    greetings = list()
@@ -265,7 +268,12 @@ class My_city(webapp2.RequestHandler):
 		gender = data['gender']
 		introduce = data['introduce']
 		interest = data['interest']
-		sub_me_number = data['sub_me_number']
+		sub_me = list()
+		for people in data['sub_me']:
+		    sub_me.append(ndb.Key(Webusers, str(people)).get())
+		i_sub = list()
+		for people in data['i_sub']:
+		    i_sub.append(ndb.Key(Webusers, str(people)).get())
 		greetings = Greeting_person.query(ancestor=ndb.Key(Webusers, str(user.email()))).order(Greeting_person.date).fetch()
 		for activity in taken:
 		    take_activity.append(ndb.Key(Activity, long(activity)).get())
@@ -282,7 +290,10 @@ class My_city(webapp2.RequestHandler):
 		'post_activity':post_activity,
 		'introduce':introduce,
 		'interest':interest_tag,
-		'sub_me_number':sub_me_number,
+		'sub_me_number':len(sub_me),
+		'sub_me':sub_me,
+		'i_sub':i_sub,
+		
 		'len_interest':len(interest_tag),
 		'gender':gender,
 		'photo':photo,
@@ -316,7 +327,7 @@ class Person(webapp2.RequestHandler):
 		'user_id':str(user)
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-            conn = httplib.HTTPConnection("olenew2014.appspot.com")
+            conn = httplib.HTTPConnection("localhost","8888")
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -330,7 +341,6 @@ class Person(webapp2.RequestHandler):
 	    interest_tag = list()
 	    greetings_author=list()
 	    greetings_content = list()
-	    sub_me_number = 0
             if responses.status == 200:
 		data = json.loads(responses.read())
 		photo = data['photo']
@@ -341,7 +351,13 @@ class Person(webapp2.RequestHandler):
 		gender = data['gender']
 		introduce = data['introduce']
 		interest = data['interest']
-		sub_me_number = data['sub_me_number']
+		sub_me = list()
+		for people in data['sub_me']:
+		    sub_me.append(ndb.Key(Webusers, str(people)).get())
+
+		i_sub = list()
+		for people in data['i_sub']:
+		    i_sub.append(ndb.Key(Webusers, str(people)).get())
 		for activity in taken:
 		    take_activity.append(ndb.Key(Activity, long(activity)).get())
 		for activity in like:
@@ -351,6 +367,13 @@ class Person(webapp2.RequestHandler):
 		for tag in interest:
 		    interest_tag.append(str(tag))
 		greetings = Greeting_person.query(ancestor=ndb.Key(Webusers, str(user))).order(Greeting_person.date).fetch()
+		## subscribe cancel or not##
+		guest_query = ndb.Key(Webusers, guest_id).get()
+		if user not in guest_query.subscribe:
+		    action = 'subscribe'
+		elif user in guest_query.subscribe:
+		    action = 'unsubscribe'
+		   
 	    template_value = {
 		'nick': nick,
 		'take_activity':take_activity,
@@ -358,13 +381,16 @@ class Person(webapp2.RequestHandler):
 		'post_activity':post_activity,
 		'introduce':introduce,
 		'interest':interest_tag,
-		'sub_me_number':sub_me_number,
+		'sub_me_number':len(sub_me),
+		'sub_me':sub_me,
+		'i_sub':i_sub,
 		'len_interest':len(interest_tag),
 		'gender':gender,
 		'photo':photo,
 		'user': user,
 		'guest': guest_id,
-		'greetings':greetings
+		'greetings':greetings,
+		'action':action 
 	    }
 	    template = JINJA_ENVIRONMENT.get_template('person.html')
 	    self.response.write(template.render(template_value))
@@ -387,13 +413,11 @@ class Activity_page(webapp2.RequestHandler):
 	for image in images:
 	    image_urls.append(image.url)
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
-        conn = httplib.HTTPConnection("olenew2014.appspot.com")
+        conn = httplib.HTTPConnection("localhost","8888")
         conn.request("POST", "/api/activity", json.dumps(requests), headers)
         responses = conn.getresponse()
         if responses.status == 200:
 	    data = json.loads(responses.read())
-	    print "host" + data['host_photo']
-	    #guest
 	    all_guests = list()
 	    all_users = Webusers.query().fetch()
 	    for user in all_users:
@@ -439,7 +463,7 @@ class Activity_page(webapp2.RequestHandler):
         	'authorize_url': decorator.authorize_url(),
         	'has_credentials': decorator.has_credentials(),
 		'google_calendar_url':google_calendar_url,
-		'image_urls':image_urls,
+		'image_urls':image_urls
 	    }
 	    print "like_action:" + str(data['like_action'])
 	    template = JINJA_ENVIRONMENT.get_template('activity.html')
@@ -530,6 +554,13 @@ class Image_Upload(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('image_upload.html')
         self.response.write(template.render(template_value))
 
+####Just for test ##########
+class Search_nearby(webapp2.RequestHandler):
+    def get(self):
+        template_value = dict()
+        template = JINJA_ENVIRONMENT.get_template('search_nearby.html')
+        self.response.write(template.render(template_value))
+
 application = webapp2.WSGIApplication([
 	('/post', Post_activity),
 	('/profile_create', Profile_create),
@@ -542,6 +573,7 @@ application = webapp2.WSGIApplication([
         ('/all_activities',All_Activity),
         (decorator.callback_path, decorator.callback_handler()),
 	('/image_upload', Image_Upload),
+	('/search_nearby', Search_nearby),
 ], debug = True)
 
 
