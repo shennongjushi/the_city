@@ -50,13 +50,13 @@
         </a>
         </li>
         <li class="dropdown">
-        <a href="/all_activities" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
+        <a href="/all_activities?start_id=1" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
         <ul class="dropdown-menu">
-          <li><a href="/all_activities#music">Music</a></li>
-          <li><a href="/all_activities#movie">Movie</a></li>
-          <li><a href="/all_activities#travel">Travel</a></li>
-          <li><a href="/all_activities#food">Food</a></li>                    
-          <li><a href="/all_activities#other">Other</a></li>                    
+          <li><a href="/all_activities?start_id=1#music">Music</a></li>
+          <li><a href="/all_activities?start_id=1#movie">Movie</a></li>
+          <li><a href="/all_activities?start_id=1#travel">Travel</a></li>
+          <li><a href="/all_activities?start_id=1#food">Food</a></li>                    
+          <li><a href="/all_activities?start_id=1#other">Other</a></li>                    
         </ul>
         </li>
         <li><a href="/my_city">My City</a></li>
@@ -87,40 +87,36 @@
     </div>
     <div class="tab-content">
       <div id="music" class="tab-pane fade in active">
-        <!--<div class="row">
-        </br>
-        -->
         <h4>Music</h4>
-        {% set j = 0%}
         {% for i in range(music_count)%}
         <div class="row">
           </br>
           <div class="col-md-4">
             <div class="imgAbt">
               <img width="250px" height="250px"
-              src="/img?key={{music_cover[i]}}" />
+              src="/img?key={{music_cover[i+(start_id-1)*5]}}" />
             </div>
           </div>
           <div class="col-md-8">
             <a href =
-              "/activity?id={{music_activity[i].key.id()}}"><h3>{{music_title[i]}}</h3></a>
+              "/activity?id={{music_activity[i+(start_id-1)*5].key.id()}}"><h3>{{music_title[i+(start_id-1)*5]}}</h3></a>
             <ul class ="list-unstyled">
               <h5>
                 <li>
-                {{music_start[i]}} -- {{music_end[i]}}
+                {{music_start[i+(start_id-1)*5]}} -- {{music_end[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
-                {{music_activity[i].address}}
+                {{music_activity[i+(start_id-1)*5].address}}
                 <span class="separator">&nbsp;|&nbsp;</span>
                 <a
-                  href="/person?user={{music_holder[i].key.id()}}">{{music_holder[i].nickname}}</a>
+                  href="/person?user={{music_holder[i+(start_id-1)*5].key.id()}}">{{music_holder[i+(start_id-1)*5].nickname}}</a>
                 </li>
                 <li class="">
                 <span>Type：</span>
                 <a href="/all_activities#music">Music</a>
                 </li>
                 <li >
-                {{music_activity[i].take_number}} peple take it
-                &nbsp;&nbsp;{{music_activity[i].like_number}} people like it
+                {{music_activity[i+(start_id-1)*5].take_number}} peple take it
+                &nbsp;&nbsp;{{music_activity[i+(start_id-1)*5].like_number}} people like it
                 </li>
               </h5>
             </ul>
@@ -129,8 +125,12 @@
         {% endfor %}
         <nav>
           <ul class="pager">
-            <li><a href="#music#{{j}}">Previous</a></li>
-            <li><a href="#music#{{j+1}}">Next</a></li>
+            {% if start_id is larger1%}
+            <li><a href="?start_id={{start_id-1}}#music">Previous</a></li>
+            {% endif %}
+            {% if music_next is larger0 %}
+            <li><a href="?start_id={{start_id+1}}#music">Next</a></li>
+            {% endif %}
           </ul>
         </nav>
 
@@ -145,35 +145,45 @@
           <div class="col-md-4">
             <div class="imgAbt">
               <img width="250px" height="250px"
-              src="/img?key={{food_cover[i]}}" />
+              src="/img?key={{food_cover[i+(start_id-1)*5]}}" />
             </div>
           </div>
           <div class="col-md-8">
             <a href =
-              "/activity?id={{food_activity[i].key.id()}}"><h3>{{food_title[i]}}</h3></a>
+              "/activity?id={{food_activity[i+(start_id-1)*5].key.id()}}"><h3>{{food_title[i+(start_id-1)*5]}}</h3></a>
             <ul class ="list-unstyled">
               <h5>
                 <li>
-                {{food_start[i]}} -- {{food_end[i]}}
+                {{food_start[i+(start_id-1)*5]}} -- {{food_end[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
-                {{food_activity[i].address}}
+                {{food_activity[i+(start_id-1)*5].address}}
                 <span class="separator">&nbsp;|&nbsp;</span>
                 <a
-                  href="/person?user={{food_holder[i].key.id()}}">{{food_holder[i].nickname}}</a>
+                  href="/person?user={{food_holder[i+(start_id-1)*5].key.id()}}">{{food_holder[i+(start_id-1)*5].nickname}}</a>
                 </li>
                 <li class="">
                 <span>Type：</span>
-                <a href="/all_activities#food">Food</a>
+                <a href="/all_activities?start_id=1#food">Food</a>
                 </li>
                 <li >
-                {{food_activity[i].take_number}} peple take it
-                &nbsp;&nbsp;{{food_activity[i].like_number}} people like it
+                {{food_activity[i+(start_id-1)*5].take_number}} peple take it
+                &nbsp;&nbsp;{{food_activity[i+(start_id-1)*5].like_number}} people like it
                 </li>
               </h5>
             </ul>
           </div>
         </div>
         {% endfor %}
+        <nav>
+          <ul class="pager">
+            {% if start_id is larger1%}
+            <li><a href="?start_id={{start_id-1}}#food">Previous</a></li>
+            {% endif %}
+            {% if food_next is larger0 %}
+            <li><a href="?start_id={{start_id+1}}#food">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
 
       </div>
       <div id="movie" class="tab-pane fade">
@@ -184,35 +194,45 @@
           <div class="col-md-4">
             <div class="imgAbt">
               <img width="250px" height="250px"
-              src="/img?key={{movie_cover[i]}}" />
+              src="/img?key={{movie_cover[i+(start_id-1)*5]}}" />
             </div>
           </div>
           <div class="col-md-8">
             <a href =
-              "/activity?id={{movie_activity[i].key.id()}}"><h3>{{movie_title[i]}}</h3></a>
+              "/activity?id={{movie_activity[i+(start_id-1)*5].key.id()}}"><h3>{{movie_title[i+(start_id-1)*5]}}</h3></a>
             <ul class ="list-unstyled">
               <h5>
                 <li>
-                {{movie_start[i]}} -- {{movie_end[i]}}
+                {{movie_start[i+(start_id-1)*5]}} -- {{movie_end[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
-                {{movie_activity[i].address}}
+                {{movie_activity[i+(start_id-1)*5].address}}
                 <span class="separator">&nbsp;|&nbsp;</span>
                 <a
-                  href="/person?user={{movie_holder[i].key.id()}}">{{movie_holder[i].nickname}}</a>
+                  href="/person?user={{movie_holder[i+(start_id-1)*5].key.id()}}">{{movie_holder[i+(start_id-1)*5].nickname}}</a>
                 </li>
                 <li class="">
                 <span>Type：</span>
                 <a href="/all_activities#movie">Movie</a>
                 </li>
                 <li >
-                {{movie_activity[i].take_number}} peple take it
-                &nbsp;&nbsp;{{movie_activity[i].like_number}} people like it
+                {{movie_activity[i+(start_id-1)*5].take_number}} peple take it
+                &nbsp;&nbsp;{{movie_activity[i+(start_id-1)*5].like_number}} people like it
                 </li>
               </h5>
             </ul>
           </div>
         </div>
         {% endfor %}
+        <nav>
+          <ul class="pager">
+            {% if start_id is larger1%}
+            <li><a href="?start_id={{start_id-1}}#movie">Previous</a></li>
+            {% endif %}
+            {% if movie_next is larger0 %}
+            <li><a href="?start_id={{start_id+1}}#movie">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
 
       </div>
       <div id="travel" class="tab-pane fade">
@@ -223,35 +243,45 @@
           <div class="col-md-4">
             <div class="imgAbt">
               <img width="250px" height="250px"
-              src="/img?key={{travel_cover[i]}}" />
+              src="/img?key={{travel_cover[i+(start_id-1)*5]}}" />
             </div>
           </div>
           <div class="col-md-8">
             <a href =
-              "/activity?id={{travel_activity[i].key.id()}}"><h3>{{travel_title[i]}}</h3></a>
+              "/activity?id={{travel_activity[i+(start_id-1)*5].key.id()}}"><h3>{{travel_title[i+(start_id-1)*5]}}</h3></a>
             <ul class ="list-unstyled">
               <h5>
                 <li>
-                {{travel_start[i]}} -- {{travel_end[i]}}
+                {{travel_start[i+(start_id-1)*5]}} -- {{travel_end[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
-                {{travel_activity[i].address}}
+                {{travel_activity[i+(start_id-1)*5].address}}
                 <span class="separator">&nbsp;|&nbsp;</span>
                 <a
-                  href="/person?user={{travel_holder[i].key.id()}}">{{travel_holder[i].nickname}}</a>
+                  href="/person?user={{travel_holder[i+(start_id-1)*5].key.id()}}">{{travel_holder[i+(start_id-1)*5].nickname}}</a>
                 </li>
                 <li class="">
                 <span>Type：</span>
                 <a href="/all_activities#travel">Travel</a>
                 </li>
                 <li >
-                {{travel_activity[i].take_number}} peple take it
-                &nbsp;&nbsp;{{travel_activity[i].like_number}} people like it
+                {{travel_activity[i+(start_id-1)*5].take_number}} peple take it
+                &nbsp;&nbsp;{{travel_activity[i+(start_id-1)*5].like_number}} people like it
                 </li>
               </h5>
             </ul>
           </div>
         </div>
         {% endfor %}
+        <nav>
+          <ul class="pager">
+            {% if start_id is larger1%}
+            <li><a href="?start_id={{start_id-1}}#travel">Previous</a></li>
+            {% endif %}
+            {% if travel_next is larger0 %}
+            <li><a href="?start_id={{start_id+1}}#travel">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
 
       </div>
 
@@ -263,35 +293,45 @@
           <div class="col-md-4">
             <div class="imgAbt">
               <img width="250px" height="250px"
-              src="/img?key={{other_cover[i]}}" />
+              src="/img?key={{other_cover[i+(start_id-1)*5]}}" />
             </div>
           </div>
           <div class="col-md-8">
             <a href =
-              "/activity?id={{other_activity[i].key.id()}}"><h3>{{other_title[i]}}</h3></a>
+              "/activity?id={{other_activity[i+(start_id-1)*5].key.id()}}"><h3>{{other_title[i+(start_id-1)*5]}}</h3></a>
             <ul class ="list-unstyled">
               <h5>
                 <li>
-                {{other_start[i]}} -- {{other_end[i]}}
+                {{other_start[i+(start_id-1)*5]}} -- {{other_end[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
-                {{other_activity[i].address}}
+                {{other_activity[i+(start_id-1)*5].address}}
                 <span class="separator">&nbsp;|&nbsp;</span>
                 <a
-                  href="/person?user={{other_holder[i].key.id()}}">{{other_holder[i].nickname}}</a>
+                  href="/person?user={{other_holder[i+(start_id-1)*5].key.id()}}">{{other_holder[i+(start_id-1)*5].nickname}}</a>
                 </li>
                 <li class="">
                 <span>Type：</span>
-                <a href="/all_activities#other">{{other_activity[i].tag}}</a>
+                <a href="/all_activities#other">{{other_activity[i+(start_id-1)*5].tag}}</a>
                 </li>
                 <li >
-                {{other_activity[i].take_number}} peple take it
-                &nbsp;&nbsp;{{other_activity[i].like_number}} people like it
+                {{other_activity[i+(start_id-1)*5].take_number}} peple take it
+                &nbsp;&nbsp;{{other_activity[i+(start_id-1)*5].like_number}} people like it
                 </li>
               </h5>
             </ul>
           </div>
         </div>
         {% endfor %}
+        <nav>
+          <ul class="pager">
+            {% if start_id is larger1%}
+            <li><a href="?start_id={{start_id-1}}#other">Previous</a></li>
+            {% endif %}
+            {% if other_next is larger0 %}
+            <li><a href="?start_id={{start_id+1}}#other">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
 
       </div>
     </div>
