@@ -35,6 +35,8 @@ def larger1(someitem):
     return someitem > 1
 def larger2(someitem):
     return someitem > 2
+def smaller(someitem):
+    return someitem<5
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -43,6 +45,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 JINJA_ENVIRONMENT.tests["larger0"] = larger0
 JINJA_ENVIRONMENT.tests["larger1"] = larger1
 JINJA_ENVIRONMENT.tests["larger2"] = larger2
+JINJA_ENVIRONMENT.tests["smaller"] = smaller
 
 ##########################################
 #           Google Calendar Plugin       #
@@ -86,6 +89,7 @@ class Index(webapp2.RequestHandler):
         keyword = self.request.get('q')
         if keyword:
             print keyword
+            self.redirect('/search?keyword=%s'%keyword)
         music_activity = list()
         movie_activity = list()
         travel_activity = list()
@@ -172,6 +176,10 @@ class Index(webapp2.RequestHandler):
 
 class Post_activity(webapp2.RequestHandler):
     def get(self):
+        keyword = self.request.get('q')
+        if keyword:
+            print keyword
+            self.redirect('/search?keyword=%s'%keyword)
         user = users.get_current_user()
 	if not user:
 	    self.redirect(users.create_login_url('/post'))
@@ -188,6 +196,10 @@ class Post_activity(webapp2.RequestHandler):
 
 class Profile_create(webapp2.RequestHandler):
     def get(self):
+        keyword = self.request.get('q')
+        if keyword:
+            print keyword
+            self.redirect('/search?keyword=%s'%keyword)
         user = users.get_current_user()
 	if not user:
 	    self.redirect(users.create_login_url('/profile_create'))
@@ -206,6 +218,10 @@ class Profile_create(webapp2.RequestHandler):
 	#else
 class Profile_edit(webapp2.RequestHandler):
     def get(self):
+        keyword = self.request.get('q')
+        if keyword:
+            print keyword
+            self.redirect('/search?keyword=%s'%keyword)
 	user = users.get_current_user()
 	if not user:
 	    self.redirect(users.create_login_url('/profile_edit'))
@@ -233,6 +249,10 @@ class Profile_edit(webapp2.RequestHandler):
 #My city
 class My_city(webapp2.RequestHandler):
     def get(self):
+        keyword = self.request.get('q')
+        if keyword:
+            print keyword
+            self.redirect('/search?keyword=%s'%keyword)
 	user = users.get_current_user()
 	if not user:
 	    self.redirect(users.create_login_url('/my_city'))
@@ -241,7 +261,7 @@ class My_city(webapp2.RequestHandler):
 		'user_id':str(user.email())
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-            conn = httplib.HTTPConnection("olenew2014.appspot.com")
+            conn = httplib.HTTPConnection("localhost",8888)
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -319,7 +339,7 @@ class Person(webapp2.RequestHandler):
 		'user_id':str(user)
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-            conn = httplib.HTTPConnection("olenew2014.appspot.com")
+            conn = httplib.HTTPConnection("localhost",8888)
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -375,6 +395,10 @@ class Person(webapp2.RequestHandler):
 class Activity_page(webapp2.RequestHandler):
     @decorator.oauth_aware
     def get(self):	    
+        keyword = self.request.get('q')
+        if keyword:
+            print keyword
+            self.redirect('/search?keyword=%s'%keyword)
 	guest_id = ''
 	user = users.get_current_user()
 	if user:
@@ -390,7 +414,7 @@ class Activity_page(webapp2.RequestHandler):
 	for image in images:
 	    image_urls.append(image.url)
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
-        conn = httplib.HTTPConnection("olenew2014.appspot.com")
+        conn = httplib.HTTPConnection("localhost",8888)
         conn.request("POST", "/api/activity", json.dumps(requests), headers)
         responses = conn.getresponse()
         if responses.status == 200:
@@ -451,43 +475,83 @@ class Activity_page(webapp2.RequestHandler):
 	    
 class All_Activity(webapp2.RequestHandler):
     def get(self):
+        keyword = self.request.get('q')
+        if keyword:
+            print keyword
+            self.redirect('/search?keyword=%s'%keyword)
         activities = Activity.query().order(Activity.start_date).fetch()
         music_cover = list()
         music_title = list()
-        music_activity = list()  
+        music_activity = list()
+        music_start = list()
+        music_end = list()
+        music_holder = list()
         food_cover = list()
         food_title = list()
         food_activity = list()
+        food_start = list()
+        food_end = list()
+        food_holder = list()
         movie_cover = list()
         movie_title = list()
         movie_activity = list()
+        movie_start = list()
+        movie_end = list()
+        movie_holder = list()
         travel_cover = list()
         travel_title = list()
         travel_activity = list()
+        travel_start = list()
+        travel_end = list()
+        travel_holder = list()
         other_cover = list()
         other_title = list()
         other_activity = list()
+        other_start = list()
+        other_end = list()
+        other_holder = list()
         for activity in activities:
             if(activity.tag.lower()=="music"):
                 music_cover.append(activity.cover)
                 music_title.append(activity.title)
                 music_activity.append(activity)
+                music_start.append(str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+' '+str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+                music_end.append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+ ' '+ str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+                host = ndb.Key(Webusers, str(activity.host)).get()
+                music_holder.append(host)
+
             elif(activity.tag.lower()=="food"):
                 food_cover.append(activity.cover)
                 food_title.append(activity.title)
                 food_activity.append(activity)
+                food_start.append(str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+' '+str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+                food_end.append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+ ' '+ str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+                host = ndb.Key(Webusers, str(activity.host)).get()
+                food_holder.append(host)
             elif(activity.tag.lower()=="movie"):
                 movie_cover.append(activity.cover)
                 movie_title.append(activity.title)
                 movie_activity.append(activity)
+                movie_start.append(str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+' '+str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+                movie_end.append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+ ' '+ str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+                host = ndb.Key(Webusers, str(activity.host)).get()
+                movie_holder.append(host)
             elif(activity.tag.lower()=="travel"):
                 travel_cover.append(activity.cover)
                 travel_title.append(activity.title)
                 travel_activity.append(activity)
+                travel_start.append(str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+' '+str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+                travel_end.append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+ ' '+ str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+                host = ndb.Key(Webusers, str(activity.host)).get()
+                travel_holder.append(host)
             else:
                 other_cover.append(activity.cover)
                 other_title.append(activity.title)
                 other_activity.append(activity)
+                other_start.append(str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+' '+str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+                other_end.append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+ ' '+ str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+                host = ndb.Key(Webusers, str(activity.host)).get()
+                other_holder.append(host)
         music_counter = len(music_cover)
         food_counter = len(food_cover)
         movie_counter = len(movie_cover)
@@ -495,26 +559,41 @@ class All_Activity(webapp2.RequestHandler):
         other_counter = len(other_cover)
         print music_counter
         template_value = {
-                'music_counter':music_counter,
+                'music_count':music_counter,
                 'music_cover':music_cover,
                 'music_title':music_title,
                 'music_activity':music_activity,
-                'food_counter':food_counter,
+                'music_start':music_start,
+                'music_end':music_end,
+                'music_holder':music_holder,
+                'food_count':food_counter,
                 'food_cover':food_cover,
                 'food_title':food_title,
                 'food_activity':food_activity,
-                'movie_counter':movie_counter,
+                'food_start':food_start,
+                'food_end':food_end,
+                'food_holder':food_holder,
+                'movie_count':movie_counter,
                 'movie_cover':movie_cover,
                 'movie_title':movie_title,
                 'movie_activity':movie_activity,
-                'travel_counter':travel_counter,
+                'movie_start':movie_start,
+                'movie_end':movie_end,
+                'movie_holder':movie_holder,
+                'travel_count':travel_counter,
                 'travel_cover':travel_cover,
                 'travel_title':travel_title,
                 'travel_activity':travel_activity,
-                'other_counter':other_counter,
+                'travel_start':travel_start,
+                'travel_end':travel_end,
+                'travel_holder':travel_holder,
+                'other_count':other_counter,
                 'other_cover':other_cover,
                 'other_title':other_title,
                 'other_activity':other_activity,
+                'other_start':other_start,
+                'other_end':other_end,
+                'other_holder':other_holder,
 
         }
         template =  JINJA_ENVIRONMENT.get_template('all_activities.html')
@@ -534,9 +613,98 @@ class Image_Upload(webapp2.RequestHandler):
         self.response.write(template.render(template_value))
 
 class Search(webapp2.RequestHandler):
-            template_value = dict()
-	    template = JINJA_ENVIRONMENT.get_template('search.html')
-	    self.response.write(template.render(template_value))
+    def get(self):
+        keyword = self.request.get('keyword')
+        requests = {'keyword':str(keyword)}
+        headers = {"Content-type": "application/json", "Accept": "text/plain"}
+        conn = httplib.HTTPConnection("localhost",8888)
+        conn.request("POST", "/api/search", json.dumps(requests), headers)
+        responses = conn.getresponse()
+        data = json.loads(responses.read())
+        
+        ##ongoing_title = list()
+        ##ongoing_cover = list()
+        ##ongoing_location = list()
+        ##ongoing_holder = list()
+        ##ongoing_take = list()
+        ##ongoing_like = list()
+        ##ongoing_start = list()
+        ##ongoing_end = list()
+        ##ongoing_act = list()
+        ##ongoing_tag = list()
+
+        ##past_title = list()
+        ##past_cover = list()
+        ##past_location = list()
+        ##past_holder = list()
+        ##past_take = list()
+        ##past_like = list()
+        ##past_start = list()
+        ##past_end = list()
+        ##past_act = list()
+        ##past_tag = list()
+
+        ##time = datetime.now()
+        ##i = 0
+        ##for start in start_time:
+        ##    if start <= time:
+        ##        past_title.append(title[i])
+        ##        past_cover.append(cover[i])
+        ##        past_location.append(location[i])
+        ##        past_holder.append(holder[i])
+        ##        past_take.append(take_number[i])
+        ##        past_like.append(like_number[i])
+        ##        past_start.append(start_time[i])
+        ##        past_end.append(end_time[i])
+        ##        past_act.append(act[i])
+        ##        past_tag.append(tag[i])
+        ##    else:
+        ##        ongoing_title.append(title[i])
+        ##        ongoing_cover.append(cover[i])
+        ##        ongoing_location.append(location[i])
+        ##        ongoing_holder.append(holder[i])
+        ##        ongoing_take.append(take_number[i])
+        ##        ongoing_like.append(like_number[i])
+        ##        ongoing_start.append(start_time[i])
+        ##        ongoing_end.append(end_time[i])
+        ##        ongoing_act.append(act[i])
+        ##        ongoing_tag.append(tag[i])
+        ##    i = i+1
+        past_count = len(data['past_title'])
+        ongoing_count = len(data['ongoing_title'])
+        print "hahahaha"
+        print ongoing_count
+        print past_count
+        template_value = dict()
+        template_value={
+                'keyword':keyword,
+                'past_count':past_count,
+                'ongoing_count':ongoing_count,
+                'past_act':     data['past_activity'],
+                'past_title':   data['past_title'],
+                'past_cover':   data['past_cover'],
+                'past_location':data['past_location'],
+                'past_holder':   data['past_holder'],
+                'past_take':    data['past_take_number'],
+                'past_like':    data['past_like_number'],
+                'past_start':   data['past_start_time'],
+                'past_end':     data['past_end_time'],
+                'past_tag':     data['past_tag'],
+                'past_holder_id': data['past_holder_id'],
+                'ongoing_act':     data['ongoing_activity'],
+                'ongoing_title':   data['ongoing_title'],
+                'ongoing_cover':   data['ongoing_cover'],
+                'ongoing_location':data['ongoing_location'],
+                'ongoing_holder':   data['ongoing_holder'],
+                'ongoing_take':    data['ongoing_take_number'],
+                'ongoing_like':    data['ongoing_like_number'],
+                'ongoing_start':   data['ongoing_start_time'],
+                'ongoing_end':     data['ongoing_end_time'],
+                'ongoing_tag':     data['ongoing_tag'],
+                'ongoing_holder_id': data['ongoing_holder_id'],
+                }
+	template = JINJA_ENVIRONMENT.get_template('search.html')
+	self.response.write(template.render(template_value))
 
 
 application = webapp2.WSGIApplication([
@@ -551,6 +719,7 @@ application = webapp2.WSGIApplication([
         ('/all_activities',All_Activity),
         (decorator.callback_path, decorator.callback_handler()),
 	('/image_upload', Image_Upload),
+        ('/search',Search),
 ], debug = True)
 
 
