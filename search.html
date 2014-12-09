@@ -52,11 +52,11 @@
         <li class="dropdown">
         <a href="/all_activities" class="dropdown-toggle" data-toggle="dropdown">All Activities <b class="caret"></b></a>
         <ul class="dropdown-menu">
-          <li><a href="/all_activities#music">Music</a></li>
-          <li><a href="/all_activities#movie">Movie</a></li>
-          <li><a href="/all_activities#travel">Travel</a></li>
-          <li><a href="/all_activities#food">Food</a></li>                    
-          <li><a href="/all_activities#other">Other</a></li>                    
+          <li><a href="/all_activities?start_id=1#music">Music</a></li>
+          <li><a href="/all_activities?start_id=1#movie">Movie</a></li>
+          <li><a href="/all_activities?start_id=1#travel">Travel</a></li>
+          <li><a href="/all_activities?start_id=1#food">Food</a></li>                    
+          <li><a href="/all_activities?start_id=1#other">Other</a></li>                    
         </ul>
         </li>
         <li><a href="/my_city">My City</a></li>
@@ -79,7 +79,7 @@
       <ul class="nav nav-tabs nav-justified" id="type">
         <li class="active">
         <a data-toggle="tab" href="#Undergoing">Undergoing</a></li>
-        <li><a data-toggle="tab" href="#Past">Post</a></li>
+        <li><a data-toggle="tab" href="#Past">Past</a></li>
       </ul>
     </div>
     <div class="tab-content">
@@ -91,35 +91,47 @@
           <div class="col-md-4">
             <div class="imgAbt">
               <img width="250px" height="250px"
-              src="/img?key={{ongoing_cover[i]}}" />
+              src="/img?key={{ongoing_cover[i+(start_id-1)*5]}}" />
             </div>
           </div>
           <div class="col-md-8">
             <a href =
-              "/activity?id={{ongoing_act[i]}}"><h3>{{ongoing_title[i]}}</h3></a>
+              "/activity?id={{ongoing_act[i+(start_id-1)*5]}}"><h3>{{ongoing_title[i+(start_id-1)*5]}}</h3></a>
             <ul class ="list-unstyled">
               <h5>
                 <li>
-                {{ongoing_start[i]}} -- {{ongoing_end[i]}}
+                {{ongoing_start[i+(start_id-1)*5]}} -- {{ongoing_end[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
-                {{ongoing_location[i]}}
+                {{ongoing_location[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
                 <a
-                  href="/person?user={{ongoing_holder_id[i]}}">{{ongoing_holder[i]}}</a>
+                  href="/person?user={{ongoing_holder_id[i+(start_id-1)*5]}}">{{ongoing_holder[i+(start_id-1)*5]}}</a>
                 </li>
                 <li class="">
                 <span>Type：</span>
-                <a href="/all_activities#{{ongoing_tag[i]}}">{{ongoing_tag[i]}}</a>
+                <a href="/all_activities#{{ongoing_tag[i+(start_id-1)*5]}}">{{ongoing_tag[i+(start_id-1)*5]}}</a>
                 </li>
                 <li >
-                {{ongoing_take[i]}} peple take it
-                &nbsp;&nbsp;{{ongoing_like[i]}} people like it
+                {{ongoing_take[i+(start_id-1)*5]}} peple take it
+                &nbsp;&nbsp;{{ongoing_like[i+(start_id-1)*5]}} people like it
                 </li>
               </h5>
             </ul>
           </div>
         </div>
         {% endfor %}
+        <nav>
+          <ul class="pager">
+            {% if start_id is larger1%}
+            <li><a
+              href="?start_id={{start_id-1}}&keyword={{keyword}}#Undergoing">Previous</a></li>
+            {% endif %}
+            {% if ongoing_next is larger0 %}
+            <li><a
+              href="?start_id={{start_id+1}}&keyword={{keyword}}#Undergoing">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
       </div>
       <div id="Past" class="tab-pane fade ">
         <h4>Search Result for {{keyword}}</h4>
@@ -129,35 +141,48 @@
           <div class="col-md-4">
             <div class="imgAbt">
               <img width="250px" height="250px"
-              src="/img?key={{past_cover[i]}}" />
+              src="/img?key={{past_cover[i+(start_id-1)*5]}}" />
             </div>
           </div>
           <div class="col-md-8">
             <a href =
-              "/activity?id={{past_act[i]}}"><h3>{{past_title[i]}}</h3></a>
+              "/activity?id={{past_act[i+(start_id-1)*5]}}"><h3>{{past_title[i+(start_id-1)*5]}}</h3></a>
             <ul class ="list-unstyled">
               <h5>
                 <li>
-                {{past_start[i]}} -- {{past_end[i]}}
+                {{past_start[i+(start_id-1)*5]}} -- {{past_end[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
-                {{past_location[i]}}
+                {{past_location[i+(start_id-1)*5]}}
                 <span class="separator">&nbsp;|&nbsp;</span>
                 <a
-                  href="/person?user={{past_holder_id[i]}}">{{past_holder[i]}}</a>
+                  href="/person?user={{past_holder_id[i+(start_id-1)*5]}}">{{past_holder[i+(start_id-1)*5]}}</a>
                 </li>
                 <li class="">
                 <span>Type：</span>
-                <a href="/all_activities#{{past_tag[i]}}">{{past_tag[i]}}</a>
+                <a href="/all_activities#{{past_tag[i+(start_id-1)*5]}}">{{past_tag[i+(start_id-1)*5]}}</a>
                 </li>
                 <li >
-                {{past_take[i]}} peple take it
-                &nbsp;&nbsp;{{past_like[i]}} people like it
+                {{past_take[i+(start_id-1)*5]}} peple take it
+                &nbsp;&nbsp;{{past_like[i+(start_id-1)*5]}} people like it
                 </li>
               </h5>
             </ul>
           </div>
         </div>
         {% endfor %}
+        <nav>
+          <ul class="pager">
+            {% if start_id is larger1%}
+            <li><a
+              href="?start_id={{start_id-1}}&keyword={{keyword}}#Past">Previous</a></li>
+            {% endif %}
+            {% if past_next is larger0 %}
+            <li><a
+              href="?start_id={{start_id+1}}&keyword={{keyword}}#Past">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+
       </div>
 
 
