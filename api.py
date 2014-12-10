@@ -612,6 +612,35 @@ class Nearby(webapp2.RequestHandler):
         self.response.headers['Accept'] = "text/plain"
         self.response.write(json.dumps(result))
 
+
+class Hot_api(webapp2.RequestHandler):
+    def post(self):
+	result = dict()
+        activity_query = Activity.query(Activity.end_date>datetime.now()).order(Activity.end_date, -Activity.hot_number).fetch(10)
+	result['hot_id'] = list()
+	result['hot_title'] = list()
+	result['hot_start'] = list()
+	result['hot_end'] = list()
+	result['hot_take'] = list()
+	result['hot_like'] = list()
+	result['hot_address'] = list()
+	result['hot_type'] = list()
+	result['hot_cover']=list()
+	for activity in activity_query:
+	    result['hot_id'].append(str(activity.key.id()))
+	    result['hot_title'].append(str(activity.title))
+	    result['hot_start'].append(str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+' '+str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+	    result['hot_end'].append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+' '+str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+	    result['hot_take'].append(str(activity.take_number))
+	    result['hot_like'].append(str(activity.like_number))
+	    result['hot_address'].append(str(activity.address))
+	    result['hot_type'].append(str(activity.tag))
+	    result['hot_cover'].append(str(activity.cover))
+	    print str(activity.key.id())
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.headers['Accept'] = "text/plain"
+        self.response.write(json.dumps(result))
+
 application = webapp2.WSGIApplication([
     ('/api/post',Upload_api),
     ('/api/profile',Profile_api),
@@ -625,6 +654,7 @@ application = webapp2.WSGIApplication([
     ('/api/image_upload', Image_upload_api),
     ('/api/nearby', Nearby),
     ('/api/search',Search_api),
+    ('/api/hot_activity', Hot_api),
 ], debug=True)
 
 

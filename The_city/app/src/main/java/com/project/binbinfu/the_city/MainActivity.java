@@ -19,39 +19,74 @@ package com.project.binbinfu.the_city;
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.squareup.picasso.Picasso;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HTTP;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.apache.http.Header;
+import org.w3c.dom.Text;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collections;
+
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 
     static HotPagerAdapter mHotPagerAdapter;
-
+    private static FragmentManager fragmentmanager;
     /**
      * The {@link android.support.v4.view.ViewPager} that will display the object collection.
      */
     static ViewPager mViewPager;
 
+    private static Hot_class hot_activities = new Hot_class();
+
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         // Create the adapter that will return a fragment for each of the three primary sections
         // of the app.
 
-        mHotPagerAdapter = new HotPagerAdapter(getSupportFragmentManager());
+        //mHotPagerAdapter = new HotPagerAdapter(getSupportFragmentManager());
+        fragmentmanager = getSupportFragmentManager();
         // Set up the action bar.
         final ActionBar actionBar = getActionBar();
 
@@ -130,10 +165,46 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_selected, container, false);
-            // Set up the ViewPager, attaching the adapter.
+            final View rootView = inflater.inflate(R.layout.fragment_selected, container, false);
             mViewPager = (ViewPager) rootView.findViewById(R.id.pager);
-            mViewPager.setAdapter(mHotPagerAdapter);
+            //Fetch data
+            AsyncHttpClient client = new AsyncHttpClient();
+            JSONObject jsonObject = new JSONObject();
+            StringEntity entity = null;
+            try {
+                jsonObject.put("test", "test");
+                entity = new StringEntity(jsonObject.toString());
+                entity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            client.post(rootView.getContext(),"http://the-city.appspot.com/api/hot_activity",entity,"application/json",new JsonHttpResponseHandler(){
+                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+                    try {
+                        GsonBuilder gsonBuilder = new GsonBuilder();
+                        Gson gson3 = gsonBuilder.create();
+                        String str = response.toString();
+                        Log.v("test","success");
+                        hot_activities = gson3.fromJson(str,Hot_class.class);
+                        mHotPagerAdapter = new HotPagerAdapter(fragmentmanager);
+                        mViewPager.setAdapter(mHotPagerAdapter);
+
+                    } catch (Exception ex) {
+                        Log.e("Hello", "Failed to parse JSON due to: " + ex);
+                    }
+                }
+
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable,JSONObject errorResponse) {
+                    Log.i("error", "fail to request");
+                    Log.v("geo","fail");
+                }
+            });
+            // Set up the ViewPager, attaching the adapter.
+            //mViewPager = (ViewPager) rootView.findViewById(R.id.pager);
+            //mViewPager.setAdapter(mHotPagerAdapter);
 
             return rootView;
         }
@@ -180,7 +251,31 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         public Fragment getItem(int i) {
             Fragment fragment = new HotObjectFragment();
             Bundle args = new Bundle();
-            args.putInt(HotObjectFragment.ARG_OBJECT, i + 1); // Our object is just an integer :-P
+            Log.v("test","fragment");
+            Log.v("test",hot_activities.hot_id.get(0));
+            if (hot_activities.hot_id.size()!=0) {
+                args.putString("hot_id", hot_activities.hot_id.get(i));
+                args.putString("hot_title", hot_activities.hot_title.get(i));
+                args.putString("hot_start", hot_activities.hot_start.get(i));
+                args.putString("hot_end", hot_activities.hot_end.get(i));
+                args.putString("hot_take", hot_activities.hot_take.get(i));
+                args.putString("hot_like", hot_activities.hot_like.get(i));
+                args.putString("hot_address", hot_activities.hot_address.get(i));
+                args.putString("hot_type", hot_activities.hot_type.get(i));
+                args.putString("hot_cover",hot_activities.hot_cover.get(i));
+            }
+            else{
+                args.putString("hot_id", "");
+                args.putString("hot_title", "");
+                args.putString("hot_start", "");
+                args.putString("hot_end", "");
+                args.putString("hot_take", "");
+                args.putString("hot_like", "");
+                args.putString("hot_address", "");
+                args.putString("hot_type", "");
+                args.putString("hot_cover","");
+            }
+                //args.putString("hot_title",hot_activities.hot_id.get(0));
             fragment.setArguments(args);
             return fragment;
         }
@@ -188,13 +283,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         @Override
         public int getCount() {
             // For this contrived example, we have a 100-object collection.
-            return 100;
+            return hot_activities.hot_id.size();
         }
 
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return "OBJECT " + (position + 1);
-        }
     }
 
     /**
@@ -202,15 +293,40 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
      */
     public static class HotObjectFragment extends Fragment {
 
-        public static final String ARG_OBJECT = "object";
-
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_collection_object, container, false);
+            final TextView title = (TextView) rootView.findViewById(R.id.title);
+            final TextView tag = (TextView) rootView.findViewById(R.id.tag);
+            final TextView time = (TextView) rootView.findViewById(R.id.time);
+            final TextView address = (TextView) rootView.findViewById(R.id.address);
+            final TextView like = (TextView) rootView.findViewById(R.id.like);
+            final TextView take = (TextView) rootView.findViewById(R.id.take);
+            final ImageView cover = (ImageView) rootView.findViewById(R.id.cover);
+
             Bundle args = getArguments();
-            ((TextView) rootView.findViewById(android.R.id.text1)).setText(
-                    Integer.toString(args.getInt(ARG_OBJECT)));
+            title.setText(args.getString("hot_title"));
+            tag.setText(args.getString("hot_type"));
+            time.setText(args.getString("hot_start")+" -- " +args.getString("hot_end"));
+            address.setText(args.getString("hot_address"));
+            like.setText("Like: "+args.getString("hot_like"));
+            take.setText("Take: "+args.getString("hot_take"));
+            if (!args.getString("hot_cover").equals("")) {
+                Picasso.with(rootView.getContext())
+                        .load("http://the-city.appspot.com/img?key="+args.getString("hot_cover"))
+                        .placeholder(R.drawable.ico_loading)
+                        .resize(250, 200)
+                        .into(cover);
+            }
+            else{
+                Log.v("binbn","haha2");
+                Picasso.with(rootView.getContext()) //
+                        .load("http://upload.wikimedia.org/wikipedia/commons/b/b9/No_Cover.jpg") //
+                        .placeholder(R.drawable.ico_loading) //
+                        .resize(250, 200)
+                        .into(cover);
+            }
             return rootView;
         }
     }
