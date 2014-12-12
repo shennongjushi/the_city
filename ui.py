@@ -265,7 +265,7 @@ class My_city(webapp2.RequestHandler):
 		'user_id':str(user.email())
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-            conn = httplib.HTTPConnection("localhost",8888)
+            conn = httplib.HTTPConnection("helloworld0923.appspot.com")
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -350,7 +350,7 @@ class Person(webapp2.RequestHandler):
 		'user_id':str(user)
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-            conn = httplib.HTTPConnection("localhost",8888)
+            conn = httplib.HTTPConnection("helloworld0923.appspot.com")
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -440,7 +440,7 @@ class Activity_page(webapp2.RequestHandler):
 	for image in images:
 	    image_urls.append(image.url)
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
-        conn = httplib.HTTPConnection("localhost",8888)
+        conn = httplib.HTTPConnection("helloworld0923.appspot.com")
         conn.request("POST", "/api/activity", json.dumps(requests), headers)
         responses = conn.getresponse()
         if responses.status == 200:
@@ -687,7 +687,7 @@ class Search(webapp2.RequestHandler):
         keyword = self.request.get('keyword')
         requests = {'keyword':str(keyword)}
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
-        conn = httplib.HTTPConnection("localhost",8888)
+        conn = httplib.HTTPConnection("helloworld0923.appspot.com")
         conn.request("POST", "/api/search", json.dumps(requests), headers)
         responses = conn.getresponse()
         data = json.loads(responses.read())
