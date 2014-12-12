@@ -295,7 +295,9 @@ class Activity_api(webapp2.RequestHandler):
 	    host_nick = ''
 	    take_action = 1
 	    like_action = 1
-	    guest = ndb.Key(Webusers, str(guest_id)).get()
+	    guest = ''
+	    if guest_id:
+	        guest = ndb.Key(Webusers, str(guest_id)).get()
 	    if guest:
 	       if activity_id in guest.take_activity:
 	           take_action = 0
@@ -321,6 +323,10 @@ class Activity_api(webapp2.RequestHandler):
 	    if activity.end_date:
 		calendar_end = change_time_format(activity.end_date,0)
 	   #################### Imag #################### 
+	    images = Imag.query(ancestor = ndb.Key(Activity, long(activity_id))).order(Imag.date).fetch()
+	    image_urls = list()
+	    for image in images:
+	        image_urls.append(image.url)
 	    responses = {
 		'title':activity.title,
 		'start_date':start_date,
@@ -343,7 +349,8 @@ class Activity_api(webapp2.RequestHandler):
 		'like_action':like_action,
 		'take_action':take_action,
 		'calendar_start':calendar_start,
-		'calendar_end':calendar_end
+		'calendar_end':calendar_end,
+		'pics':image_urls
 	    }	
             self.response.headers['Content-Type'] = "application/json"
             self.response.headers['Accept'] = "text/plain"
@@ -382,6 +389,38 @@ class Like_api(webapp2.RequestHandler):
         self.response.headers['Accept'] = "text/plain"
         self.response.write(json.dumps(responses))
 
+class Android_Take(webapp2.RequestHandler):
+    def post(self):
+	requests = json.loads(self.request.body)
+	activity_id = requests['activity_id']
+        guest_id = requests['guest_id']
+	action = requests['action']
+	activity = ndb.Key(Activity, long(activity_id)).get()
+	guest = ndb.Key(Webusers, str(guest_id)).get()
+	take_number = activity.take_number
+	if action == "1" and (str(activity_id) not in guest.take_activity):
+	    take_number = activity.take_number + 1
+	    activity.take_number = activity.take_number + 1
+            activity.hot_number = activity.hot_number + 1
+	    activity.put()
+	    guest.take_activity.append(str(activity_id))
+	    guest.put()
+	    action = "0"
+	elif action == "0" and (str(activity_id) in guest.take_activity):
+	    take_number = activity.take_number - 1
+	    activity.take_number = activity.take_number - 1
+            activity.hot_number = activity.hot_number -1
+	    activity.put()
+	    guest.take_activity.remove(str(activity_id))
+	    guest.put()
+	    action = "1" 
+	responses = {
+	    'action':action
+	}
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.headers['Accept'] = "text/plain"
+        self.response.write(json.dumps(responses))
+
 class Take_api(webapp2.RequestHandler):
     @decorator.oauth_aware
     def post(self):
@@ -403,7 +442,7 @@ class Take_api(webapp2.RequestHandler):
 	    comment_entity.content = comment
 	    comment_entity.put()
 	guest = ndb.Key(Webusers, str(guest_id)).get()
-	take_number = activity.like_number
+	take_number = activity.take_number
 	if action == "1" and (str(activity_id) not in guest.take_activity):
 	    take_number = activity.take_number + 1
 	    activity.take_number = activity.take_number + 1
@@ -641,6 +680,32 @@ class Hot_api(webapp2.RequestHandler):
         self.response.headers['Accept'] = "text/plain"
         self.response.write(json.dumps(result))
 
+class Android_get_upload_url(webapp2.RequestHandler):
+    def post(self):
+        requests = json.loads(self.request.body)
+        activity_id = str(requests['activity_id'])
+	responses = dict()
+        responses['upload_url'] = blobstore.create_upload_url('/api/android_image_add?activity_id=%s' %(activity_id))
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.headers['Accept'] = "text/plain"
+        self.response.write(json.dumps(responses))
+
+class Android_Image_Add(blobstore_handlers.BlobstoreUploadHandler):
+   def post(self):
+	activity_id = self.request.get('activity_id')
+	activity = ndb.Key(Activity, long(activity_id)).get()	
+	image = self.get_uploads('image')
+	if image and activity:
+	    blob_info = image[0]
+	    image_new = Imag(parent=ndb.Key(Activity, long(activity_id)))
+	    image_new.blob_key = str(blob_info.key())
+	    image_new.url = '/img?key='+str(blob_info.key())
+	    image_url = image_new.url
+	    image_new.put()
+	    self.response.write(image_url)
+	else:
+            self.response.write("")
+	
 application = webapp2.WSGIApplication([
     ('/api/post',Upload_api),
     ('/api/profile',Profile_api),
@@ -655,6 +720,9 @@ application = webapp2.WSGIApplication([
     ('/api/nearby', Nearby),
     ('/api/search',Search_api),
     ('/api/hot_activity', Hot_api),
+    ('/api/android_take',Android_Take),
+    ('/api/android_image_add',Android_Image_Add),
+    ('/api/android_get_url',Android_get_upload_url),
 ], debug=True)
 
 
