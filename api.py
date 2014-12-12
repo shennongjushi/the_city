@@ -482,6 +482,65 @@ class Image_upload_api(blobstore_handlers.BlobstoreUploadHandler):
 	    image_new.url = '/img?key='+str(blob_info.key())
 	    image_new.put()
 	self.redirect('/image_upload?finish=1')
+
+class Get_all_api(webapp2.RequestHandler):
+    def post(self):
+        activities = Activity.query().order(Activity.start_date).fetch()
+        responses = dict()
+        responses['ongoing_title'] = list()
+        responses['ongoing_cover'] = list()
+        responses['ongoing_location'] = list()
+        responses['ongoing_holder'] = list()
+        responses['ongoing_holder_id'] = list()
+        responses['ongoing_take_number'] = list()
+        responses['ongoing_like_number'] = list()
+        responses['ongoing_start_time'] = list()
+        responses['ongoing_end_time'] = list()
+        responses['ongoing_activity'] = list()
+        responses['ongoing_tag'] = list()
+        responses['past_title'] = list()
+        responses['past_cover'] = list()
+        responses['past_location'] = list()
+        responses['past_holder'] = list()
+        responses['past_holder_id'] = list()
+        responses['past_take_number'] = list()
+        responses['past_like_number'] = list()
+        responses['past_start_time'] = list()
+        responses['past_end_time'] = list()
+        responses['past_activity'] = list()
+        responses['past_tag'] = list()
+        time = datetime.now()
+        for activity in activities:
+            if activity.start_date < time:
+                responses['past_activity'].append(activity.key.id())
+                responses['past_title'].append(activity.title)
+                responses['past_cover'].append(activity.cover)
+                responses['past_location'].append(activity.address)
+	        host = ndb.Key(Webusers, str(activity.host)).get()
+                responses['past_holder'].append(host.nickname)
+                responses['past_holder_id'].append(host.key.id())
+                responses['past_start_time'].append( str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+ ' '+ str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+                responses['past_end_time'].append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+ ' '+ str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+                responses['past_take_number'].append(activity.take_number)
+                responses['past_like_number'].append(activity.like_number)
+                responses['past_tag'].append(activity.tag)
+            else:
+                responses['ongoing_activity'].append(activity.key.id())
+                responses['ongoing_title'].append(activity.title)
+                responses['ongoing_cover'].append(activity.cover)
+                responses['ongoing_location'].append(activity.address)
+	        host = ndb.Key(Webusers, str(activity.host)).get()
+                responses['ongoing_holder'].append(host.nickname)
+                responses['ongoing_holder_id'].append(host.key.id())
+                responses['ongoing_start_time'].append( str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+ ' '+ str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+                responses['ongoing_end_time'].append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+ ' '+ str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+                responses['ongoing_take_number'].append(activity.take_number)
+                responses['ongoing_like_number'].append(activity.like_number)
+                responses['ongoing_tag'].append(activity.tag)
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.headers['Accept'] = "text/plain"
+        self.response.write(json.dumps(responses))
+
 class Search_api(webapp2.RequestHandler):
     def post(self):
         requests = json.loads(self.request.body)
@@ -625,6 +684,7 @@ application = webapp2.WSGIApplication([
     ('/api/image_upload', Image_upload_api),
     ('/api/nearby', Nearby),
     ('/api/search',Search_api),
+    ('/api/get_all',Get_all_api),
 ], debug=True)
 
 
