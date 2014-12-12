@@ -10,5 +10,7 @@
     <string name="title_section1">Hot</string>
     <string name="title_section2">Search</string>
     <string name="title_section3">My City</string>
+    <string name="title_activity_search">Search</string>
+    <string name="title_activity_nearby">Nearby</string>
 
 </resources>

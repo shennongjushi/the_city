@@ -100,6 +100,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 }
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.container, fragment2).commit();
+                Intent intent = new Intent(MainActivity.this, Search.class);
+
+                MainActivity.this.startActivity(intent);
                 break;
             case 2:
                 // The third is My City
@@ -111,6 +114,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 }
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.container, fragment3).commit();
+                Intent nearby = new Intent(MainActivity.this, Nearby.class);
+
+                MainActivity.this.startActivity(nearby);
                 break;
             default:
                 break;
