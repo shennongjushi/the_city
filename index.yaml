@@ -16,15 +16,6 @@ indexes:
   - name: hot_number
     direction: desc
 
-<<<<<<< HEAD
-=======
-- kind: Activity
-  ancestor: yes
-  properties:
-  - name: hot_number
-    direction: desc
-
->>>>>>> ba6cd8af54471ba8cff9a8a091f8e5bc20e595c3
 - kind: Activity
   ancestor: yes
   properties:

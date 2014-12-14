@@ -27,7 +27,7 @@ from apiclient import discovery
 from oauth2client import appengine
 from oauth2client import client
 from google.appengine.api import memcache
-
+from gcm import *
 def larger0(someitem):
     return someitem > 0
 
@@ -135,6 +135,8 @@ class Index(webapp2.RequestHandler):
             user_query = ndb.Key(Webusers,user.email()).get()
 	    if not user_query:
 	        self.redirect('/profile_create')
+	    elif not user_query.nickname:
+		self.redirect('/profile_create')
 	    else:
                 logout_url = users.create_logout_url('/')
 	        template_value = {
@@ -213,6 +215,14 @@ class Profile_create(webapp2.RequestHandler):
 	        }
 	    	template = JINJA_ENVIRONMENT.get_template('profile_create.html')
 	        self.response.write(template.render(template_value))
+	    elif not user_query.nickname:
+	        profile_url = blobstore.create_upload_url('/api/profile')
+	        template_value = {
+	            'profile_url': profile_url,
+	            'user': user.email()
+	        }
+	    	template = JINJA_ENVIRONMENT.get_template('profile_create.html')
+	        self.response.write(template.render(template_value))
 	    else:
 		self.redirect('/my_city')
 	#else
@@ -260,16 +270,14 @@ class My_city(webapp2.RequestHandler):
 	    self.redirect(users.create_login_url('/my_city'))
 	elif not get_user:
 	    self.redirect('/profile_create')
+	elif not get_user.nickname:
+	    self.redirect('/profile_create')
 	else:
 	    requests = {
 		'user_id':str(user.email())
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-<<<<<<< HEAD
-            conn = httplib.HTTPConnection("helloworld0923.appspot.com")
-=======
             conn = httplib.HTTPConnection("the-city.appspot.com")
->>>>>>> ba6cd8af54471ba8cff9a8a091f8e5bc20e595c3
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -354,11 +362,7 @@ class Person(webapp2.RequestHandler):
 		'user_id':str(user)
 	    }
             headers = {"Content-type": "application/json", "Accept": "text/plain"}
-<<<<<<< HEAD
-            conn = httplib.HTTPConnection("helloworld0923.appspot.com")
-=======
             conn = httplib.HTTPConnection("the-city.appspot.com")
->>>>>>> ba6cd8af54471ba8cff9a8a091f8e5bc20e595c3
             conn.request("POST", "/api/person", json.dumps(requests), headers)
             responses = conn.getresponse()
 	    #Get date
@@ -448,11 +452,7 @@ class Activity_page(webapp2.RequestHandler):
 	for image in images:
 	    image_urls.append(image.url)
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
-<<<<<<< HEAD
-        conn = httplib.HTTPConnection("helloworld0923.appspot.com")
-=======
         conn = httplib.HTTPConnection("the-city.appspot.com")
->>>>>>> ba6cd8af54471ba8cff9a8a091f8e5bc20e595c3
         conn.request("POST", "/api/activity", json.dumps(requests), headers)
         responses = conn.getresponse()
         if responses.status == 200:
@@ -470,7 +470,7 @@ class Activity_page(webapp2.RequestHandler):
 	####### google_calendar_date_calculate ######
 	    calendar_start = data['calendar_start']
 	    calendar_end = data['calendar_end']
-	    google_calendar_url="https://www.google.com/calendar/render?dates="+calendar_start+"/"+calendar_end+"&details=activity:+http://olenew2014.appspot.com/activity?id="+str(activity_id)+"&text="+data['title']+"&action=TEMPLATE&sprop=http://olenew2014.appspot.com/activity?id="+str(activity_id)+"&trp=False&location="+data['address']+"&sf=true&output=xml#f"
+	    google_calendar_url="https://www.google.com/calendar/render?dates="+calendar_start+"/"+calendar_end+"&details=activity:+http://the-city.appspot.com/activity?id="+str(activity_id)+"&text="+data['title']+"&action=TEMPLATE&sprop=http://the-city.appspot.com/activity?id="+str(activity_id)+"&trp=False&location="+data['address']+"&sf=true&output=xml#f"
 	    template_value = {
 	    	'title': data['title'],
 		'start_date':data['start_date'],
@@ -699,11 +699,7 @@ class Search(webapp2.RequestHandler):
         keyword = self.request.get('keyword')
         requests = {'keyword':str(keyword)}
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
-<<<<<<< HEAD
-        conn = httplib.HTTPConnection("helloworld0923.appspot.com")
-=======
         conn = httplib.HTTPConnection("the-city.appspot.com")
->>>>>>> ba6cd8af54471ba8cff9a8a091f8e5bc20e595c3
         conn.request("POST", "/api/search", json.dumps(requests), headers)
         responses = conn.getresponse()
         data = json.loads(responses.read())

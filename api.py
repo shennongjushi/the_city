@@ -13,13 +13,12 @@ import pickle
 import logging
 import httplib2
 import math
-
 from apiclient import discovery
 from oauth2client import appengine
 from oauth2client import client
 from google.appengine.api import memcache
 from datetime import *
-
+from gcm import *
 # CLIENT_SECRETS, name of a file containing the OAuth 2.0 information for this
 # application, including client_id and client_secret, which are found
 # on the API Access tab on the Google APIs
@@ -102,6 +101,8 @@ class Webusers(ndb.Model):#Each Webusers xx.key.id() is the user
     introduce = ndb.StringProperty()
     google_calendar = ndb.BooleanProperty()
     calendar_key = ndb.StringProperty(repeated = True)
+    device_key = ndb.StringProperty(repeated = True)
+    device_on = ndb.BooleanProperty()
 
 ##Change time format for google calendar
 def change_time_format(time, time_type):
@@ -181,6 +182,7 @@ class Profile_api(blobstore_handlers.BlobstoreUploadHandler):
 	if not user_query:
 	    user_query = Webusers(id=str(user_))
 	    user_query.google_calendar = False
+	    user_query.device_on = False
 	user_query.nickname = self.request.get('nick')
 	user_query.gender = self.request.get('gender')
 	birthday_ = self.request.get('birthday')
@@ -206,6 +208,11 @@ class Person_api(webapp2.RequestHandler):
 	requests = json.loads(self.request.body)
         user_id = requests['user_id']
 	user = ndb.Key(Webusers, str(user_id)).get()
+	if not user:
+	    user = Webusers(id=str(user_id))
+	    user.google_calendar = False
+	    user.device_on = False
+	    user.put()
 	users = Webusers.query().fetch()
 	subscribe_me_id = list()
 	for each in users:
@@ -275,6 +282,26 @@ class Subscribe_api(webapp2.RequestHandler):
 	if user_id not in guest.subscribe and action == 'subscribe':
 	    guest.subscribe.append(str(user_id))
 	    guest.put()
+	####### For gcm ########
+	    user_query = ndb.Key(Webusers,str(user_id)).get()
+	    if user_query:
+	        if not user_query.device_on:
+	            for key in user_query.device_key:
+			try:
+                            gcm = GCM("AIzaSyAje3whZxvNCwZ5uejwQG4VFsrr01jb3MM")
+                            data = {'param1': 'value1', 'param2': 'value2'}
+                            gcm.plaintext_request(registration_id=str(key), data=data)
+			except:
+			    print "not valid"
+            #            # Plaintext request
+	        #gcm = GCM("AIzaSyAje3whZxvNCwZ5uejwQG4VFsrr01jb3MM")
+	        #data = {'param1': 'value1', 'param2': 'value2'}
+	    
+	        ## Plaintext request
+	        #reg_id = "APA91bG5EhT0wiMXu0OE3g6p6tefMP-P52Hi4tyexvrQBXX5AlorpO8z5tbTwOCZhyxWgrbURk2anbMsntnFtWlCCDbGXUg9siu12BQXD_c3Qxg45pO6o2KHLqrBq_StVj5OPhtWkzQ5vhuGrkSEPlGj8p4vb6atLnzNXCeJ4_K2k_0uT4YmqdI"
+	        #gcm.plaintext_request(registration_id=reg_id, data=data)
+
+	####### For gcm ########
 	if user_id in guest.subscribe and action == 'unsubscribe':
 	    guest.subscribe.remove(str(user_id))
 	    guest.put()
@@ -764,7 +791,66 @@ class Android_Image_Add(blobstore_handlers.BlobstoreUploadHandler):
 	    self.response.write(image_url)
 	else:
             self.response.write("")
+
+class Gcm_id(webapp2.RequestHandler):
+    def post(self):
+	requests = json.loads(self.request.body)
+	user_id = requests['email']
+	reg_id = requests['reg_id']
+	user_query = ndb.Key(Webusers, str(user_id)).get()
+	if not user_query:
+	    user_query = Webusers(id=str(user_id))
+	    user_query.google_calendar = False
+	    user_query.device_on = False
+	if reg_id:
+	    if str(reg_id) not in user_query.device_key:
+		user_query.device_key.append(str(reg_id))
+	user_query.put()
+	responses = dict()
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.headers['Accept'] = "text/plain"
+        self.response.write(json.dumps(responses))
 	
+
+class Android_person_activity(webapp2.RequestHandler):
+    def post(self):
+	requests = json.loads(self.request.body)
+	user_id = requests['email']
+	action = requests['action']
+	user = ndb.Key(Webusers, str(user_id)).get()
+	if not user:
+	    user = Webusers(id=str(user_id))
+	    user.google_calendar = False
+	    user.device_on = False
+	    user.put()
+	responses = dict()
+	responses['ids'] = list()
+	responses['covers'] = list()
+	responses['titles'] = list()
+	responses['starts'] = list()
+	responses['ends'] = list()
+	responses['locations'] = list()
+	responses['types'] = list()
+	activities = list()
+	if action == '0':#Like
+	    activities = user.like_activity
+	elif action == '1': #Take
+	    activities = user.take_activity
+	elif action == '2': # Post
+	    activities = user.my_activity
+	for activity in activities:
+	    activity_entity = ndb.Key(Activity,long(activity)).get()
+	    responses['ids'].append(activity)
+	    responses['covers'].append(activity_entity.cover)
+	    responses['titles'].append(activity_entity.title)
+            responses['starts'].append( str(activity_entity.start_date.year)+'/'+str(activity_entity.start_date.month)+'/'+str(activity_entity.start_date.day)+ ' '+ str(activity_entity.start_date.hour)+':'+str(activity_entity.start_date.minute))
+            responses['ends'].append( str(activity_entity.end_date.year)+'/'+str(activity_entity.end_date.month)+'/'+str(activity_entity.end_date.day)+ ' '+ str(activity_entity.end_date.hour)+':'+str(activity_entity.end_date.minute))
+	    responses['locations'].append(activity_entity.address)
+	    responses['types'].append(activity_entity.tag)
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.headers['Accept'] = "text/plain"
+        self.response.write(json.dumps(responses))
+
 application = webapp2.WSGIApplication([
     ('/api/post',Upload_api),
     ('/api/profile',Profile_api),
@@ -783,6 +869,8 @@ application = webapp2.WSGIApplication([
     ('/api/android_take',Android_Take),
     ('/api/android_image_add',Android_Image_Add),
     ('/api/android_get_url',Android_get_upload_url),
+    ('/api/android_person_activity',Android_person_activity),
+    ('/api/gcm_id',Gcm_id),
 ], debug=True)
 
 
