@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Create Acitivity</title>
+    <title>My City</title>
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -135,47 +135,69 @@ function placeMarker(location) {
             </div>
           </div></br>
           <div class="row">
-            <h3>Take</h3>
+	    <div class="page-header">
+               <h3>Take</h3>
+	    </div>
 	    {% if take_activity %}
 	    {% for activity in take_activity %}
             <div class="col-md-3 my_thumbnail2">
                <a href="/activity?id={{activity.key.id()}}"><img src="/img?key={{activity.cover}}" class="img-thumbnail" width="150px" height="150px"></a>
+	       <div><a href="/activity?id={{activity.key.id()}}" class="c_words">{{activity.title}}</a>
+	       </div>
             </div>
+	    <style>
+            .c_words{position:absolute;width:150px;height:20px;top:150px;left:5px;text-align:center;}
+	    </style>
 	    {% endfor %}
 	    {% else %}
 	    <h4>You don't have taken any activity</h4>
 	    {% endif %}
-          </div></br>
+          </div></br></br>
           <div class="row">
-            <h3>Like</h3>
+	    <div class="page-header">
+              <h3>Like</h3>
+	    </div>
 	    {% if like_activity %}
 	    {% for activity in like_activity %}
             <div class="col-md-3 my_thumbnail2">
               <a href="/activity?id={{activity.key.id()}}"><img src="/img?key={{activity.cover}}" class="img-thumbnail" width="150px" height="150px"></a>
+	       <div><a href="/activity?id={{activity.key.id()}}" class="c_words">{{activity.title}}</a>
+	       </div>
             </div>
+	    <style>
+            .c_words{position:absolute;width:150px;height:20px;top:150px;left:5px;text-align:center;}
+	    </style>
 	    {% endfor %}
 	    {% else %}
 	    <h4>You don't have liken any activity</h4>
 	    {% endif %}
-          </div></br>
+          </div></br></br>
           <div class="row">
-            <h3>Post</h3>
+	    <div class="page-header">
+               <h3>Post</h3>
+	    </div>
 	    {% if post_activity %}
 	    {% for activity in post_activity %}
             <div class="col-md-3 my_thumbnail2">
               <a href="/activity?id={{activity.key.id()}}"><img src="/img?key={{activity.cover}}" class="img-thumbnail" width="150px" height="150px"></a>
+	       <div><a href="/activity?id={{activity.key.id()}}" class="c_words">{{activity.title}}</a>
+	       </div>
             </div>
+	    <style>
+            .c_words{position:absolute;width:150px;height:20px;top:150px;left:5px;text-align:center;}
+	    </style>
 	    {% endfor %}
 	    {% else %}
 	    <h4>You don't have post any activity</h4>
 	    {% endif %}
-          </div></br>
-          <div class="row">
+          </div></br></br>
+          <!--<div class="row">
             <div class="col-md-3">
               <label>My footmark</label>
               <div id='map-canvas'></div>
             </div>
-          </div></br>
+          </div>-->
+           </br>
         </div>
 	<div class="col-sm-3 col-sm-offset-1 blog-sidebar">
 	  <div class="sidebar-module sidebar-module-inset">

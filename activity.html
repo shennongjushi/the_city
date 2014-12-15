@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Create Acitivity</title>
+    <title>Acitivity Page</title>
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -36,10 +36,10 @@
    }
 
    .my_thumbnail2 img{
-	height:100px;
+	height:80px;
    }
    .my_thumbnail3 img{
-	height:85px;
+	height:60px;
    }
 </style>
 <!--style for big&map direction-->
@@ -194,16 +194,16 @@ function initialize() {
 	        <h4><strong>Type: </strong></h4>
 		<h5>{{tag}}</h5>
 		{% if like_action != 0 %}
-                <button id="like" class="btn btn-default" type="submit" onclick="like()"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{like_number}} Like</button>
+                <button id="like" class="btn btn-default" type="submit" onclick="like()"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> {{like_number}} Like</button>
 		{% else %}
-                <button id="like" class="btn btn-default" type="submit" onclick="like()"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{like_number}} Like</button>
+                <button id="like" class="btn btn-default" type="submit" onclick="like()"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> {{like_number}} Like</button>
 		{% endif %}
 		<input type="hidden" id="action" value="{{like_action}}">
 		<input id="take_action" type="hidden" name="action" value="{{take_action}}">
 		{% if take_action != 0 %}
-                <button id="take" class="btn btn-default" type="submit" data-toggle="modal" data-target=".take"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> {{take_number}} Take</button></br></br>
+                <button id="take" class="btn btn-default" type="submit" data-toggle="modal" data-target=".take"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> {{take_number}} Take</button></br></br>
 		{% else %}
-                <button id="take" class="btn btn-default" type="submit" data-toggle="modal" data-target=".take2"><span class="glyphicon glyphicon-minus" aria-hidden="true"></span> {{take_number}} Take</button></br></br>
+                <button id="take" class="btn btn-default" type="submit" data-toggle="modal" data-target=".take2"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> {{take_number}} Take</button></br></br>
 		{% endif %}
 		{% if has_credentials %}
                 <button class="btn btn-default" type="submit" onclick="window.location.href='{{google_calendar_url}}'"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Google Calendar</button></br>
@@ -211,7 +211,8 @@ function initialize() {
                 <button class="btn btn-default" type="submit" data-toggle="modal" data-target=".google_calendar"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Google Calendar</button></br>
 		{% endif %}
 	 <!--facebook-->
-                  <div class="fb-share-button" data-href="http://olenew2014.appspot.com/activity?id={{activity_id}}" data-layout="button"></div>
+		  </br>
+                  <div class="fb-share-button" data-href="http://the-city.appspot.com/activity?id={{activity_id}}" data-layout="button"></div>
 		  <div class="fb-login-button" data-max-rows="1" data-size="small" data-show-faces="false" data-auto-logout-link="true"></div>
 		<div id="fb-root"></div>
 		<script>(function(d, s, id) {
@@ -239,12 +240,12 @@ function initialize() {
 			alert("You have canceled the like activity");
 		   window.location.href="/activity?id={{activity_id}}";*/
 			if(data.action == "0"){
-		            $('#like').html('<span class="glyphicon glyphicon-minus" aria-hidden="true"></span> '+data.like+' Like');
+		            $('#like').html('<span class="glyphicon glyphicon-remove" aria-hidden="true"></span> '+data.like+' Like');
 			    alert("You have add the like activity");
 			    $('#action').val("0");
 			}
 			else{
-		            $('#like').html('<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> '+data.like+' Like');
+		            $('#like').html('<span class="glyphicon glyphicon-ok" aria-hidden="true"></span> '+data.like+' Like');
 			    alert("You have canceled the like activity");
 			    $('#action').val("1");
 		        }
@@ -262,14 +263,6 @@ function initialize() {
         <h4 class="modal-title" id="myModalLabel">I want to take</h4>
       </div>
       <div class="modal-body">
-        {% if more %}
-   	<label>Select date</label>
-	<select class="form-control selectpicker" name="take_date">
-	    {% for date in all_date%}
-	    <option value="{{date}}">{{date}}</option>
-	    {% endfor %}
-	</select>
-	{% endif %}
 	<label id="take_comment_label">Say something</label>
 	<textarea id="take_comment" class="form-control" name="comment" rows="4"></textarea>
       </div>
@@ -290,14 +283,6 @@ function initialize() {
         <h4 class="modal-title" id="myModalLabel">I want to take</h4>
       </div>
       <div class="modal-body">
-        {% if more %}
-   	<label>Select date</label>
-	<select class="form-control selectpicker" name="take_date">
-	    {% for date in all_date%}
-	    <option value="{{date}}">{{date}}</option>
-	    {% endfor %}
-	</select>
-	{% endif %}
 	<h4>Do you want to cancel it?</h4>
       </div>
       <div class="modal-footer">
@@ -388,7 +373,7 @@ function initialize() {
             </div></br>
 	    <h2>Activity Details</h2>
 	    <p>{{details}}</p>
-	    <h2>Activity Images<a href="#" class="btn btn-default" onclick="openNew()">Add Image</a></h2>
+	    <h2>Activity Images<a href="#" onclick="openNew()" style="font-size:15px">  Add Image +</a></h2>
 <script>
 function openNew() {
 	window.open("/image_upload?id={{activity_id}}",null, "height=200,width=300,status=yes,toolbar=no,menubar=no,location=no");
@@ -401,9 +386,9 @@ function openNew() {
 	    <h2>Chat</h2>
 	    {% for comment in comments%}
 	    {% if comment.author %}
-		<b>{{comment.author}}</b> saied:
+		<b>{{comment.author}}</b> said:
 	    {% else %}
-		<b>An anonymous person</b> saied:
+		<b>An anonymous person</b> said:
 	    {% endif %}
 		<blockquote>{{comment.content}}</blockquote>
 	    {% endfor%}
@@ -422,11 +407,11 @@ function openNew() {
                 success: function(data){
 		    if(data.author){
 			console.log(data.author);
-		        $("#user_chat").append( "<b>" + data.author + "</b> saied" +
+		        $("#user_chat").append( "<b>" + data.author + "</b> said" +
          	        "<blockquote>" + data.content + "</blockquote>" );
 		    }
 		    else{
-		        $( "#user_chat" ).append( "<b>An anonymous person</b> saied:" +
+		        $( "#user_chat" ).append( "<b>An anonymous person</b> said:" +
          	        "<blockquote>" + data.content + "</blockquote>" ); 
 		    }
 		}
@@ -438,22 +423,56 @@ function openNew() {
 	<div class="col-sm-4 col-sm-offset-1 blog-sidebar">
 	  <div class="sidebar-module sidebar-module-inset">
 	    <h4>Host</h4>
-            <a href="/person?user={{host}}" class="my_thumbnail2"><img src="img?key={{host_photo}}" class="img-thumbnail" width="100px" height="100px"></br>{{host_nick}}</a></br></br>
-	    <h4>Paticipates</h4>
+	    {% if host_photo %}
+	    <div>
+            <a href="/person?user={{host}}" class="my_thumbnail2"><img src="img?key={{host_photo}}" class="img-thumbnail" width="80px" height="80px"></a>
+	    <div><a class="c_words" href="/person?user={{host}}">{{host_nick}}</a></div></div>
+	    <style>
+            .c_words{position:absolute;width:80px;height:20px;top:135px;left:25px;
+                      text-align:center;}
+	    </style>
+	    </br>
+	    {% else %}
+	    <div>
+            <a href="/person?user={{host}}" class="my_thumbnail2"><img src="http://vp.cdn.cityvoterinc.com/i/account/NoPhoto_user.png" class="img-thumbnail" width="80px" height="80px"></a>
+	    <div><a class="c_words" href="/person?user={{host}}">{{host_nick}}</a></div></div>
+	    <style>
+            .c_words{position:absolute;width:80px;height:20px;top:135px;left:25px;
+                      text-align:center;}
+	    </style>
+	    </br>
+	    {% endif %}
+	    <h4>Paticipants</h4>
 	    {% set j_counter = 0 %}
 	    {% for i in range(rows) %}
 	    <div class="row">
-	      {% if i!=rows-1 or (i==rows-1 and guests_len%3==0) %}
-	      {% for m in range(3) %}
-	      <div class="col-md-4 my_thumbnail3">
-                <a href="/person?user={{all_guests[j_counter+m].key.id()}}"><img src="/img?key={{all_guests[j_counter+m].photo}}" class="img-thumbnail" width="100px" height="100px"></a>
+	      {% if i!=rows-1 or (i==rows-1 and guests_len%4==0) %}
+	      {% for m in range(4) %}
+	      <div class="col-md-3 my_thumbnail3">
+		{% if all_guests[j_counter+m].photo %}
+		<div>
+                <a href="/person?user={{all_guests[j_counter+m].key.id()}}"><img src="/img?key={{all_guests[j_counter+m].photo}}" class="img-thumbnail" width="60px" height="60px"></a></br>
+		<div><a class="c_words" href="/person?user={{all_guests[j_counter+m].key.id()}}">{{all_guests[j_counter+m].nickname}}</a></div></div>
+		{% else %}
+		<div>
+                <a href="/person?user={{all_guests[j_counter+m].key.id()}}"><img src="http://vp.cdn.cityvoterinc.com/i/account/NoPhoto_user.png" class="img-thumbnail" width="60px" height="60px"></a></br>
+		<div><a class="c_words" href="/person?user={{all_guests[j_counter+m].key.id()}}">{{all_guests[j_counter+m].nickname}}</a></div></div>
+	   	{% endif %}
 	      </div>
 	      {% endfor %}
-	      {% set j_counter = j_counter + 3 %}
+	      {% set j_counter = j_counter + 4 %}
 	      {% else %}
-	      {% for m in range(guests_len%3) %}
-	      <div class="col-md-4 my_thumbnail3">
-                <a href="/person?user={{all_guests[j_counter+m].key.id()}}"><img src="/img?key={{all_guests[j_counter+m].photo}}" class="img-thumbnail" width="100px" height="100px"></a>
+	      {% for m in range(guests_len%4) %}
+	      <div class="col-md-3 my_thumbnail3">
+		{% if all_guests[j_counter+m].photo %}
+		<div>
+                <a href="/person?user={{all_guests[j_counter+m].key.id()}}"><img src="/img?key={{all_guests[j_counter+m].photo}}" class="img-thumbnail" width="60px" height="60px"></a></br>
+		<div><a class="c_words" href="/person?user={{all_guests[j_counter+m].key.id()}}">{{all_guests[j_counter+m].nickname}}</a></div></div>
+		{% else %}
+		<div>
+                <a href="/person?user={{all_guests[j_counter+m].key.id()}}"><img src="http://vp.cdn.cityvoterinc.com/i/account/NoPhoto_user.png" class="img-thumbnail" width="60px" height="60px"></a></br>
+		<div><a class="c_words" href="/person?user={{all_guests[j_counter+m].key.id()}}">{{all_guests[j_counter+m].nickname}}</a></div></div>
+	   	{% endif %}
 	      </div>
 	      {% endfor %}
 	      {% endif %}

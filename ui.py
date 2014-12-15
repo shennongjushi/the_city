@@ -462,10 +462,10 @@ class Activity_page(webapp2.RequestHandler):
 	    for user in all_users:
 		if str(activity_id) in user.take_activity:
 		    all_guests.append(user)
-	    if len(all_guests)%3!=0:
-		rows = len(all_guests)/3 + 1
+	    if len(all_guests)%4!=0:
+		rows = len(all_guests)/4 + 1
 	    else:
-		rows = len(all_guests)/3
+		rows = len(all_guests)/4
 	    guests_len = len(all_guests)
 	####### google_calendar_date_calculate ######
 	    calendar_start = data['calendar_start']
@@ -690,114 +690,128 @@ class Search_nearby(webapp2.RequestHandler):
         template_value = dict()
         template = JINJA_ENVIRONMENT.get_template('search_nearby.html')
         self.response.write(template.render(template_value))
-
+class Clear(webapp2.RequestHandler):
+    def get(self):
+	activity_id = 6217263929622528
+	activity = ndb.Key(Activity, long(activity_id)).get()
+	activity.key.delete()
+	user = ndb.Key(Webusers, "yxb0923@gmail.com").get()
+	user.my_activity.remove(str(activity_id))
+	user.put()
+	for activity in user.my_activity:
+	   self.response.write(activity);
+	
 class Search(webapp2.RequestHandler):
     def get(self):
-        start_id = self.request.get('start_id')
-        if not start_id:
-            start_id = 1
-        keyword = self.request.get('keyword')
-        requests = {'keyword':str(keyword)}
-        headers = {"Content-type": "application/json", "Accept": "text/plain"}
-        conn = httplib.HTTPConnection("the-city.appspot.com")
-        conn.request("POST", "/api/search", json.dumps(requests), headers)
-        responses = conn.getresponse()
-        data = json.loads(responses.read())
-        
-        ##ongoing_title = list()
-        ##ongoing_cover = list()
-        ##ongoing_location = list()
-        ##ongoing_holder = list()
-        ##ongoing_take = list()
-        ##ongoing_like = list()
-        ##ongoing_start = list()
-        ##ongoing_end = list()
-        ##ongoing_act = list()
-        ##ongoing_tag = list()
+	key = self.request.get('q')
+	if key:
+            self.redirect('/search?keyword=%s#Undergoing'%key)
+	else:
+            start_id = self.request.get('start_id')
+            if not start_id:
+                start_id = 1
+            keyword = self.request.get('keyword')
+            requests = {'keyword':str(keyword)}
+            headers = {"Content-type": "application/json", "Accept": "text/plain"}
+            conn = httplib.HTTPConnection("the-city.appspot.com")
+            conn.request("POST", "/api/search", json.dumps(requests), headers)
+            responses = conn.getresponse()
+            data = json.loads(responses.read())
+            
+            ##ongoing_title = list()
+            ##ongoing_cover = list()
+            ##ongoing_location = list()
+            ##ongoing_holder = list()
+            ##ongoing_take = list()
+            ##ongoing_like = list()
+            ##ongoing_start = list()
+            ##ongoing_end = list()
+            ##ongoing_act = list()
+            ##ongoing_tag = list()
 
-        ##past_title = list()
-        ##past_cover = list()
-        ##past_location = list()
-        ##past_holder = list()
-        ##past_take = list()
-        ##past_like = list()
-        ##past_start = list()
-        ##past_end = list()
-        ##past_act = list()
-        ##past_tag = list()
+            ##past_title = list()
+            ##past_cover = list()
+            ##past_location = list()
+            ##past_holder = list()
+            ##past_take = list()
+            ##past_like = list()
+            ##past_start = list()
+            ##past_end = list()
+            ##past_act = list()
+            ##past_tag = list()
 
-        ##time = datetime.now()
-        ##i = 0
-        ##for start in start_time:
-        ##    if start <= time:
-        ##        past_title.append(title[i])
-        ##        past_cover.append(cover[i])
-        ##        past_location.append(location[i])
-        ##        past_holder.append(holder[i])
-        ##        past_take.append(take_number[i])
-        ##        past_like.append(like_number[i])
-        ##        past_start.append(start_time[i])
-        ##        past_end.append(end_time[i])
-        ##        past_act.append(act[i])
-        ##        past_tag.append(tag[i])
-        ##    else:
-        ##        ongoing_title.append(title[i])
-        ##        ongoing_cover.append(cover[i])
-        ##        ongoing_location.append(location[i])
-        ##        ongoing_holder.append(holder[i])
-        ##        ongoing_take.append(take_number[i])
-        ##        ongoing_like.append(like_number[i])
-        ##        ongoing_start.append(start_time[i])
-        ##        ongoing_end.append(end_time[i])
-        ##        ongoing_act.append(act[i])
-        ##        ongoing_tag.append(tag[i])
-        ##    i = i+1
-        past_next = 0
-        ongoing_next = 0
-        past_count = len(data['past_title'])-(int(start_id)-1)*5
-        if past_count - 5 > 0:
-            past_count = 5
-            past_next = 1
-        ongoing_count = len(data['ongoing_title'])-(int(start_id)-1)*5
-        if ongoing_count - 5 > 0:
-            ongoing_count = 5
-            ongoing_next = 1
-        print "hahahaha"
-        print ongoing_count
-        print past_count
-        template_value = dict()
-        template_value={
-                'start_id':int(start_id),
-                'past_next':int(past_next),
-                'ongoing_next': int(ongoing_next),
-                'keyword':keyword,
-                'past_count':past_count,
-                'ongoing_count':ongoing_count,
-                'past_act':     data['past_activity'],
-                'past_title':   data['past_title'],
-                'past_cover':   data['past_cover'],
-                'past_location':data['past_location'],
-                'past_holder':   data['past_holder'],
-                'past_take':    data['past_take_number'],
-                'past_like':    data['past_like_number'],
-                'past_start':   data['past_start_time'],
-                'past_end':     data['past_end_time'],
-                'past_tag':     data['past_tag'],
-                'past_holder_id': data['past_holder_id'],
-                'ongoing_act':     data['ongoing_activity'],
-                'ongoing_title':   data['ongoing_title'],
-                'ongoing_cover':   data['ongoing_cover'],
-                'ongoing_location':data['ongoing_location'],
-                'ongoing_holder':   data['ongoing_holder'],
-                'ongoing_take':    data['ongoing_take_number'],
-                'ongoing_like':    data['ongoing_like_number'],
-                'ongoing_start':   data['ongoing_start_time'],
-                'ongoing_end':     data['ongoing_end_time'],
-                'ongoing_tag':     data['ongoing_tag'],
-                'ongoing_holder_id': data['ongoing_holder_id'],
-                }
-	template = JINJA_ENVIRONMENT.get_template('search.html')
-	self.response.write(template.render(template_value))
+            ##time = datetime.now()
+            ##i = 0
+            ##for start in start_time:
+            ##    if start <= time:
+            ##        past_title.append(title[i])
+            ##        past_cover.append(cover[i])
+            ##        past_location.append(location[i])
+            ##        past_holder.append(holder[i])
+            ##        past_take.append(take_number[i])
+            ##        past_like.append(like_number[i])
+            ##        past_start.append(start_time[i])
+            ##        past_end.append(end_time[i])
+            ##        past_act.append(act[i])
+            ##        past_tag.append(tag[i])
+            ##    else:
+            ##        ongoing_title.append(title[i])
+            ##        ongoing_cover.append(cover[i])
+            ##        ongoing_location.append(location[i])
+            ##        ongoing_holder.append(holder[i])
+            ##        ongoing_take.append(take_number[i])
+            ##        ongoing_like.append(like_number[i])
+            ##        ongoing_start.append(start_time[i])
+            ##        ongoing_end.append(end_time[i])
+            ##        ongoing_act.append(act[i])
+            ##        ongoing_tag.append(tag[i])
+            ##    i = i+1
+            past_next = 0
+            ongoing_next = 0
+            past_count = len(data['past_title'])-(int(start_id)-1)*5
+            if past_count - 5 > 0:
+                past_count = 5
+                past_next = 1
+            ongoing_count = len(data['ongoing_title'])-(int(start_id)-1)*5
+            if ongoing_count - 5 > 0:
+                ongoing_count = 5
+                ongoing_next = 1
+            print "hahahaha"
+            print ongoing_count
+            print past_count
+            template_value = dict()
+            template_value={
+                    'start_id':int(start_id),
+                    'past_next':int(past_next),
+                    'ongoing_next': int(ongoing_next),
+                    'keyword':keyword,
+                    'past_count':past_count,
+                    'ongoing_count':ongoing_count,
+                    'past_act':     data['past_activity'],
+                    'past_title':   data['past_title'],
+                    'past_cover':   data['past_cover'],
+                    'past_location':data['past_location'],
+                    'past_holder':   data['past_holder'],
+                    'past_take':    data['past_take_number'],
+                    'past_like':    data['past_like_number'],
+                    'past_start':   data['past_start_time'],
+                    'past_end':     data['past_end_time'],
+                    'past_tag':     data['past_tag'],
+                    'past_holder_id': data['past_holder_id'],
+                    'ongoing_act':     data['ongoing_activity'],
+                    'ongoing_title':   data['ongoing_title'],
+                    'ongoing_cover':   data['ongoing_cover'],
+                    'ongoing_location':data['ongoing_location'],
+                    'ongoing_holder':   data['ongoing_holder'],
+                    'ongoing_take':    data['ongoing_take_number'],
+                    'ongoing_like':    data['ongoing_like_number'],
+                    'ongoing_start':   data['ongoing_start_time'],
+                    'ongoing_end':     data['ongoing_end_time'],
+                    'ongoing_tag':     data['ongoing_tag'],
+                    'ongoing_holder_id': data['ongoing_holder_id'],
+                    }
+	    template = JINJA_ENVIRONMENT.get_template('search.html')
+	    self.response.write(template.render(template_value))
 
 application = webapp2.WSGIApplication([
 	('/post', Post_activity),
@@ -813,6 +827,7 @@ application = webapp2.WSGIApplication([
 	('/image_upload', Image_Upload),
 	('/search_nearby', Search_nearby),
         ('/search',Search),
+	('/clear', Clear),
 ], debug = True)
 
 

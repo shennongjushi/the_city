@@ -79,7 +79,7 @@ class Activity(ndb.Model):
     longitude = ndb.StringProperty()#For google map
     host = ndb.StringProperty()#The name of the host
     tag = ndb.StringProperty()#The type of the activity
-    details = ndb.StringProperty() # The details of the activity
+    details = ndb.StringProperty(indexed = False) # The details of the activity
     # others
     like_number = ndb.IntegerProperty()
     take_number = ndb.IntegerProperty()
@@ -98,7 +98,7 @@ class Webusers(ndb.Model):#Each Webusers xx.key.id() is the user
     photo = ndb.StringProperty()
     subscribe = ndb.StringProperty(repeated = True)
     interest = ndb.StringProperty(repeated = True)
-    introduce = ndb.StringProperty()
+    introduce = ndb.StringProperty(indexed = False)
     google_calendar = ndb.BooleanProperty()
     calendar_key = ndb.StringProperty(repeated = True)
     device_key = ndb.StringProperty(repeated = True)
@@ -172,7 +172,7 @@ class Upload_api(blobstore_handlers.BlobstoreUploadHandler):
 	    #user
 	    user.my_activity.append(str(activity_key.id()))
 	    user.put()
-	    self.redirect('/post')
+	    self.redirect('/my_city')
 	    
 
 class Profile_api(blobstore_handlers.BlobstoreUploadHandler):
@@ -285,11 +285,11 @@ class Subscribe_api(webapp2.RequestHandler):
 	####### For gcm ########
 	    user_query = ndb.Key(Webusers,str(user_id)).get()
 	    if user_query:
-	        if not user_query.device_on:
+	        if user_query.device_on:
 	            for key in user_query.device_key:
 			try:
                             gcm = GCM("AIzaSyAje3whZxvNCwZ5uejwQG4VFsrr01jb3MM")
-                            data = {'param1': 'value1', 'param2': 'value2'}
+			    data = {'guest': guest.nickname,'user':user_query.nickname}
                             gcm.plaintext_request(registration_id=str(key), data=data)
 			except:
 			    print "not valid"
@@ -577,7 +577,7 @@ class Get_all_api(webapp2.RequestHandler):
         responses['past_tag'] = list()
         time = datetime.now()
         for activity in activities:
-            if activity.start_date < time:
+            if activity.end_date < time:
                 responses['past_activity'].append(activity.key.id())
                 responses['past_title'].append(activity.title)
                 responses['past_cover'].append(activity.cover)
@@ -639,7 +639,7 @@ class Search_api(webapp2.RequestHandler):
         time = datetime.now()
         for activity in activities:
             if query_string.lower() in activity.title.lower():
-                if activity.start_date < time:
+                if activity.end_date < time:
                     responses['past_activity'].append(activity.key.id())
                     responses['past_title'].append(activity.title)
                     responses['past_cover'].append(activity.cover)
@@ -667,7 +667,7 @@ class Search_api(webapp2.RequestHandler):
                     responses['ongoing_tag'].append(activity.tag)
 
             elif query_string.lower() in activity.address.lower():
-                if activity.start_date < time:
+                if activity.end_date < time:
                     responses['past_activity'].append(activity.key.id())
                     responses['past_title'].append(activity.title)
                     responses['past_cover'].append(activity.cover)
@@ -729,6 +729,8 @@ class Nearby(webapp2.RequestHandler):
 	result['markers']=list()
 	for i in range(len(search_result)):
 	    marker = dict()
+	    marker['title'] = search_result[i].title
+	    marker['activity'] = search_result[i].key.id()
 	    marker['cover'] = search_result[i].cover
 	    marker['latitude'] = search_result[i].latitude
 	    marker['longitude'] = search_result[i].longitude
@@ -741,7 +743,7 @@ class Nearby(webapp2.RequestHandler):
 class Hot_api(webapp2.RequestHandler):
     def post(self):
 	result = dict()
-        activity_query = Activity.query(Activity.end_date>datetime.now()).order(Activity.end_date, -Activity.hot_number).fetch(10)
+        activity_query = Activity.query().order(-Activity.hot_number).fetch(10)
 	result['hot_id'] = list()
 	result['hot_title'] = list()
 	result['hot_start'] = list()
@@ -752,16 +754,17 @@ class Hot_api(webapp2.RequestHandler):
 	result['hot_type'] = list()
 	result['hot_cover']=list()
 	for activity in activity_query:
-	    result['hot_id'].append(str(activity.key.id()))
-	    result['hot_title'].append(str(activity.title))
-	    result['hot_start'].append(str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+' '+str(activity.start_date.hour)+':'+str(activity.start_date.minute))
-	    result['hot_end'].append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+' '+str(activity.end_date.hour)+':'+str(activity.end_date.minute))
-	    result['hot_take'].append(str(activity.take_number))
-	    result['hot_like'].append(str(activity.like_number))
-	    result['hot_address'].append(str(activity.address))
-	    result['hot_type'].append(str(activity.tag))
-	    result['hot_cover'].append(str(activity.cover))
-	    print str(activity.key.id())
+	    if activity.end_date > datetime.now():
+	        result['hot_id'].append(str(activity.key.id()))
+	        result['hot_title'].append(str(activity.title))
+	        result['hot_start'].append(str(activity.start_date.year)+'/'+str(activity.start_date.month)+'/'+str(activity.start_date.day)+' '+str(activity.start_date.hour)+':'+str(activity.start_date.minute))
+	        result['hot_end'].append(str(activity.end_date.year)+'/'+str(activity.end_date.month)+'/'+str(activity.end_date.day)+' '+str(activity.end_date.hour)+':'+str(activity.end_date.minute))
+	        result['hot_take'].append(str(activity.take_number))
+	        result['hot_like'].append(str(activity.like_number))
+	        result['hot_address'].append(str(activity.address))
+	        result['hot_type'].append(str(activity.tag))
+	        result['hot_cover'].append(str(activity.cover))
+	        print str(activity.key.id())
         self.response.headers['Content-Type'] = "application/json"
         self.response.headers['Accept'] = "text/plain"
         self.response.write(json.dumps(result))
@@ -811,7 +814,40 @@ class Gcm_id(webapp2.RequestHandler):
         self.response.headers['Accept'] = "text/plain"
         self.response.write(json.dumps(responses))
 	
-
+class Notification(webapp2.RequestHandler):
+    def post(self):
+	requests = json.loads(self.request.body)
+	user_id = requests['email']
+	action = requests['action']
+	user = ndb.Key(Webusers, str(user_id)).get()
+	if not user:
+	    user = Webusers(id=str(user_id))
+	    user.google_calendar = False
+	    user.device_on = False
+	    user.put()
+	user = ndb.Key(Webusers,str(user_id)).get()
+	status = ""
+	if not user.device_on:
+	    if action == "1":
+	        user.device_on = True
+		user.put()
+	        status = "on"
+	    else:
+		status = "off"
+	else:
+	    if action == "1":
+		user.device_on = False
+		user.put()
+		status = "off"
+	    else:
+	        status = "on"
+	responses = {'status':status}
+        self.response.headers['Content-Type'] = "application/json"
+        self.response.headers['Accept'] = "text/plain"
+        self.response.write(json.dumps(responses))
+	
+	
+	
 class Android_person_activity(webapp2.RequestHandler):
     def post(self):
 	requests = json.loads(self.request.body)
@@ -871,6 +907,7 @@ application = webapp2.WSGIApplication([
     ('/api/android_get_url',Android_get_upload_url),
     ('/api/android_person_activity',Android_person_activity),
     ('/api/gcm_id',Gcm_id),
+    ('/api/device',Notification),
 ], debug=True)
 
 
